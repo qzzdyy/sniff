@@ -1,0 +1,16 @@
+name: build-ipa
+on: [push]
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: unzip -q Sniff.zip -d s
+      - run: |
+          cd s/Sniff
+          xcodebuild archive -project Sniff.xcodeproj -scheme Sniff -configuration Release -archivePath b.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO DEVELOPMENT_TEAM=""
+          mkdir -p P && cp -R b.xcarchive/Products/Applications/Sniff.app P/ && zip -qry Sniff.ipa P
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ipa
+          path: s/Sniff/Sniff.ipa
