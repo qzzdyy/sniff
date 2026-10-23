@@ -10,10 +10,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: 解压工程
         run: unzip -q Sniff.zip -d s
-      - name: 修复 Info.plist 移除 armv7 限制
-        run: |
-          plutil -remove UIRequiredDeviceCapabilities s/Sniff/Sniff/Resources/Info.plist \
-            || echo "::notice::armv7 已移除或不存在"
       - name: 生成工程
         run: |
           cd s/Sniff
