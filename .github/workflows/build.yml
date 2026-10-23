@@ -1,16 +1,38 @@
 name: build-ipa
-on: [push]
+on:
+  push:
+    branches: ['**']
+  workflow_dispatch:
 jobs:
   build:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      - run: unzip -q Sniff.zip -d s
-      - run: |
+      - name: 解压工程
+        run: unzip -q Sniff.zip -d s && ls s/Sniff
+      - name: 安装 XcodeGen 并生成工程
+        run: |
           cd s/Sniff
-          xcodebuild archive -project Sniff.xcodeproj -scheme Sniff -configuration Release -archivePath b.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO DEVELOPMENT_TEAM=""
-          mkdir -p P && cp -R b.xcarchive/Products/Applications/Sniff.app P/ && zip -qry Sniff.ipa P
+          brew install xcodegen
+          xcodegen generate
+      - name: 构建并打包未签名 IPA
+        run: |
+          cd s/Sniff
+          xcodebuild archive \
+            -project Sniff.xcodeproj \
+            -scheme Sniff \
+            -configuration Release \
+            -archivePath "$PWD/b.xcarchive" \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            DEVELOPMENT_TEAM=""
+          mkdir -p P
+          cp -R b.xcarchive/Products/Applications/Sniff.app P/
+          zip -qry Sniff.ipa P
       - uses: actions/upload-artifact@v4
         with:
           name: ipa
           path: s/Sniff/Sniff.ipa
+          if-no-files-found: error
