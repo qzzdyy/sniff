@@ -8,127 +8,39 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: 解压工程
         run: unzip -q Sniff.zip -d s
-
-      - name: 修复 Info.plist 移除 armv7 设备限制
+      - name: 修复 Info.plist 移除 armv7 限制
         run: |
           plutil -remove UIRequiredDeviceCapabilities s/Sniff/Sniff/Resources/Info.plist \
-            || echo "::notice::UIRequiredDeviceCapabilities 不存在或已移除"
-
-      - name: 安装 XcodeGen 并生成工程
+            || echo "::notice::armv7 已移除或不存在"
+      - name: 生成工程
         run: |
           cd s/Sniff
-          set +e
           brew install xcodegen > brew.log 2>&1
-          echo "::notice::brew 退出码 $?"
-          xcodegen --version
-          xcodegen generate > xcodegen.log 2>&1
-          XG=$?
-          set -e
-          echo "::notice::xcodegen 退出码 $XG"
-          grep -Ei "error|failed" xcodegen.log | head -10 | while IFS= read -r l; do echo "::error::$l"; done
-          ls -la Sniff.xcodeproj/ 2>/dev/null | head -5
-          ls Sniff.xcodeproj/xcshareddata/xcschemes/ 2>/dev/null || echo "::warning::没有共享 scheme 文件"
-          exit $XG
-
-      - name: 环境与工程诊断
-        run: |
-          xcodebuild -version
-          echo "::notice::Xcode 路径: $(xcode-select -p)"
-          cd s/Sniff
-          set +e
-          xcodebuild -list -project Sniff.xcodeproj > list.log 2>&1
-          echo "::notice::-list 退出码 $?"
-          set -e
-          grep -E "Information about|Schemes|Targets|Name:|Swift" list.log | head -20 | while IFS= read -r l; do echo "::notice::$l"; done
-          grep -Ei "error" list.log | head -10 | while IFS= read -r l; do echo "::error::$l"; done
-
+          xcodegen generate
+          xcodebuild -list -project Sniff.xcodeproj
       - name: 构建并打包未签名 IPA
         run: |
           cd s/Sniff
-          ARGS="-project Sniff.xcodeproj -configuration Release -derivedDataPath dd -destination generic/platform=iOS CODE_SIGN_IDENTITY= CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO DEVELOPMENT_TEAM="
           set +e
-          echo "=== 策略1：scheme 构建 ==="
-          xcodebuild build $ARGS -scheme Sniff > build1.log 2>&1
-          C1=$?
-          echo "::notice::scheme 构建退出码 $C1"
-          if [ $C1 -ne 0 ]; then
-            grep -E "error:|fatal error" build1.log | head -15 | while IFS= read -r l; do echo "::error::$l"; done
-            echo "=== 策略2：target 构建 ==="
-            xcodebuild build $ARGS -target Sniff > build2.log 2>&1
-            C2=$?
-            echo "::notice::target 构建退出码 $C2"
-            if [ $C2 -ne 0 ]; then
-              grep -E "error:|fatal error" build2.log | head -15 | while IFS= read -r l; do echo "::error::$l"; done
-            fi
-          fi
+          xcodebuild build -project Sniff.xcodeproj -scheme Sniff -configuration Release \
+            -derivedDataPath dd -destination 'generic/platform=iOS' \
+            CODE_SIGN_IDENTITY= CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO DEVELOPMENT_TEAM= \
+            > build.log 2>&1
+          C=$?
           set -e
-          APP=$(find dd -name "*.app" -maxdepth 4 2>/dev/null | head -1)
-          if [ -z "$APP" ]; then
-            echo "::error::未生成 .app，两种构建策略都失败了"
-            exit 65
-          fi
+          echo "::notice::xcodebuild 退出码 $C"
+          grep -E "error:|fatal error" build.log | head -20 | while IFS= read -r l; do echo "::error::$l"; done
+          if [ $C -ne 0 ]; then exit $C; fi
+          APP="dd/Build/Products/Release-iphoneos/Sniff.app"
+          test -f "$APP/Sniff" || { echo "::error::可执行文件缺失"; exit 1; }
           mkdir -p Payload
-          rm -rf "Payload/$(basename "$APP")"
+          rm -rf Payload/Sniff.app
           cp -R "$APP" Payload/
-          zip -qry Sniff.ipa Payload || { echo "::error::zip 打包失败"; exit 1; }
+          zip -qry Sniff.ipa Payload
           ls -la Sniff.ipa
-          echo "::notice::IPA 大小 $(du -h Sniff.ipa | cut -f1)，打包完成"
-
-      - name: 上传构建日志（失败时）
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: |
-            s/Sniff/*.log
-
-      - name: 上传 IPA 产物
-        if: success()
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: ipa
           path: s/Sniff/Sniff.ipa
-          if-no-files-found: error
-
-      - name: 发布 Release 并回传 IPA 到仓库
-        if: success()
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cd s/Sniff
-          TAG="build-${{ github.run_number }}"
-          set +e
-          gh release delete "$TAG" -y > rel.log 2>&1
-          gh release create "$TAG" Sniff.ipa \
-            --title "嗅探 build ${{ github.run_number }}" \
-            --notes "未签名 IPA，用 Sideloadly / 爱思助手 / AltStore 签名后安装" \
-            --latest >> rel.log 2>&1
-          R=$?
-          if [ $R -ne 0 ]; then
-            echo "::notice::Release 方式失败，改用 dist 分支回传"
-            git config user.name "sniff-ci"
-            git config user.email "sniff-ci@users.noreply.github.com"
-            BLOB=$(git hash-object -w Sniff.ipa)
-            TREE=$(printf '100644 blob %s\tSniff.ipa\n' "$BLOB" | git mktree)
-            PARENT=$(git rev-parse "refs/remotes/origin/dist" 2>/dev/null)
-            if [ -n "$PARENT" ]; then
-              C=$(git commit-tree "$TREE" -p "$PARENT" -m "[skip ci] IPA $TAG")
-            else
-              C=$(git commit-tree "$TREE" -m "[skip ci] IPA $TAG")
-            fi
-            git update-ref "refs/heads/dist" "$C"
-            git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
-            git push -f origin dist >> rel.log 2>&1
-            P=$?
-            if [ $P -ne 0 ]; then
-              echo "::error::IPA 回传仓库失败，请从 Actions artifact 下载：$(head -3 rel.log)"
-            else
-              echo "::notice::IPA 已推送到 dist 分支，可直接下载"
-            fi
-          else
-            echo "::notice::Release $TAG 已创建，可直接下载"
-          fi
-          exit 0
