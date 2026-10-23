@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: 解压工程
-        run: unzip -q Sniff.zip -d s && ls s/Sniff
+        run: unzip -q Sniff.zip -d s
       - name: 安装 XcodeGen 并生成工程
         run: |
           cd s/Sniff
@@ -18,18 +18,20 @@ jobs:
       - name: 构建并打包未签名 IPA
         run: |
           cd s/Sniff
-          xcodebuild archive \
+          echo "=== xcodebuild -list ==="
+          xcodebuild -list -project Sniff.xcodeproj
+          xcodebuild build \
             -project Sniff.xcodeproj \
             -scheme Sniff \
             -configuration Release \
-            -archivePath "$PWD/b.xcarchive" \
+            -derivedDataPath dd \
             -destination 'generic/platform=iOS' \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
             DEVELOPMENT_TEAM=""
           mkdir -p P
-          cp -R b.xcarchive/Products/Applications/Sniff.app P/
+          cp -R dd/Build/Products/Release-iphoneos/Sniff.app P/ 2>/dev/null || { echo "APP_NOT_FOUND"; find dd -name "*.app" -maxdepth 4; exit 1; }
           zip -qry Sniff.ipa P
       - uses: actions/upload-artifact@v4
         with:
