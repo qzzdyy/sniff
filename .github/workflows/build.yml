@@ -67,7 +67,12 @@ jobs:
           cp -R "$APP" Payload/
           zip -qry Sniff.ipa Payload
           ls -lh Sniff.ipa
-          du -sh Sniff.app
+          echo "---- 应用体积 ----"
+          du -sh Payload/Sniff.app
+          echo "---- 二进制 ----"
+          ls -lh Payload/Sniff.app/Sniff
+          echo "---- ffmpeg 符号 ----"
+          strings Payload/Sniff.app/Sniff | grep -c "libavformat\|FFmpegKit" || echo 0
 
       - uses: actions/upload-artifact@v4
         with:
