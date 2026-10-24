@@ -55,7 +55,11 @@ jobs:
           set -e
           echo "::notice::xcodebuild 退出码 $C"
           grep -E "error:|fatal error" build.log | head -25 | while IFS= read -r l; do echo "::error::$l"; done
-          if [ $C -ne 0 ]; then exit $C; fi
+          if [ $C -ne 0 ]; then
+            echo "---- build.log 尾部 ----"
+            tail -80 build.log
+            exit $C
+          fi
           APP="dd/Build/Products/Release-iphoneos/Sniff.app"
           test -f "$APP/Sniff" || { echo "::error::可执行文件缺失"; exit 1; }
           mkdir -p Payload
