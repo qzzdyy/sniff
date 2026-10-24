@@ -8,14 +8,41 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: 解压工程
         run: unzip -q Sniff.zip -d s
+
+      - name: 准备 FFmpeg 框架
+        run: |
+          cd s/Sniff
+          mkdir -p Vendor
+          set +e
+          echo "== 尝试从 release 下载 Frameworks.zip =="
+          curl -fL --retry 2 --max-time 900 -o /tmp/fw.zip \
+            "https://github.com/xpcapital/ffmpeg-kit-full-gpl/releases/download/6.0/Frameworks.zip"
+          R=$?
+          if [ $R -ne 0 ] || [ ! -s /tmp/fw.zip ]; then
+            echo "::warning::release 下载失败(exit=$R)，改用 clone 仓库"
+            rm -rf /tmp/fwrepo /tmp/fw.zip
+            git clone --depth 1 https://github.com/xpcapital/ffmpeg-kit-full-gpl.git /tmp/fwrepo
+            (cd /tmp/fwrepo && zip -qry /tmp/fw.zip Frameworks)
+          fi
+          set -e
+          ls -lh /tmp/fw.zip
+          unzip -q -o /tmp/fw.zip -d /tmp/fw
+          if [ -d /tmp/fw/Frameworks ]; then SRC=/tmp/fw/Frameworks; else SRC=/tmp/fw; fi
+          cp -R "$SRC"/*.xcframework Vendor/ 2>/dev/null || true
+          echo "---- Vendor 内容 ----"
+          ls -d Vendor/*.xcframework
+          du -sh Vendor
+
       - name: 生成工程
         run: |
           cd s/Sniff
           brew install xcodegen > brew.log 2>&1
           xcodegen generate
           xcodebuild -list -project Sniff.xcodeproj
+
       - name: 构建并打包未签名 IPA
         run: |
           cd s/Sniff
@@ -27,7 +54,7 @@ jobs:
           C=$?
           set -e
           echo "::notice::xcodebuild 退出码 $C"
-          grep -E "error:|fatal error" build.log | head -20 | while IFS= read -r l; do echo "::error::$l"; done
+          grep -E "error:|fatal error" build.log | head -25 | while IFS= read -r l; do echo "::error::$l"; done
           if [ $C -ne 0 ]; then exit $C; fi
           APP="dd/Build/Products/Release-iphoneos/Sniff.app"
           test -f "$APP/Sniff" || { echo "::error::可执行文件缺失"; exit 1; }
@@ -35,7 +62,9 @@ jobs:
           rm -rf Payload/Sniff.app
           cp -R "$APP" Payload/
           zip -qry Sniff.ipa Payload
-          ls -la Sniff.ipa
+          ls -lh Sniff.ipa
+          du -sh Sniff.app
+
       - uses: actions/upload-artifact@v4
         with:
           name: ipa
