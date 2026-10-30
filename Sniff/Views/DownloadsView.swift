@@ -9,19 +9,58 @@ struct DownloadsView: View {
     @State private var selected = Set<UUID>()
     @State private var shareItems: [Any] = []
     @State private var previewItem: ResourceItem?
+    @State private var taskFilter: TaskFilter = .all
+
+    enum TaskFilter: String, CaseIterable, Identifiable {
+        case all = "全部"
+        case active = "进行中"
+        case done = "已完成"
+        case failed = "失败"
+        var id: String { rawValue }
+    }
 
     private let accent = Color(red: 0.11, green: 0.11, blue: 0.12)
 
     private var tasks: [DownloadTask] { downloadManager.tasks }
-    private var allSelected: Bool { !tasks.isEmpty && selected.count >= tasks.count }
+
+    private var filteredTasks: [DownloadTask] {
+        switch taskFilter {
+        case .all:
+            return tasks
+        case .active:
+            return tasks.filter { $0.isRunning || $0.isQueued || $0.isPaused }
+        case .done:
+            return tasks.filter { $0.isDone }
+        case .failed:
+            return tasks.filter { if case .failed = $0.status { return true } else { return false } }
+        }
+    }
+
+    private func count(for filter: TaskFilter) -> Int {
+        switch filter {
+        case .all: return tasks.count
+        case .active: return tasks.filter { $0.isRunning || $0.isQueued || $0.isPaused }.count
+        case .done: return tasks.filter { $0.isDone }.count
+        case .failed: return tasks.filter { if case .failed = $0.status { return true } else { return false } }.count
+        }
+    }
+
+    private var allSelected: Bool { !filteredTasks.isEmpty && selected.count >= filteredTasks.count }
 
     var body: some View {
         NavigationStack {
-            Group {
-                if tasks.isEmpty {
-                    emptyState
-                } else {
-                    list
+            VStack(spacing: 0) {
+                if !tasks.isEmpty {
+                    filterBar
+                }
+                Group {
+                    if tasks.isEmpty {
+                        emptyState
+                    } else if filteredTasks.isEmpty {
+                        emptyFiltered
+                    } else {
+                        list
+                    }
                 }
             }
             .navigationTitle(selecting ? "已选 \(selected.count) 项" : "下载")
@@ -59,9 +98,31 @@ struct DownloadsView: View {
 
     // MARK: - 列表
 
+    private var filterBar: some View {
+        Picker("", selection: $taskFilter) {
+            ForEach(TaskFilter.allCases) { f in
+                Text(f.rawValue).tag(f)
+            }
+        }
+        .pickerStyle(.segmented)
+        .padding(.horizontal, 16)
+        .padding(.top, 6)
+        .padding(.bottom, 6)
+    }
+
+    private var emptyFiltered: some View {
+        VStack(spacing: 10) {
+            Spacer()
+            Text("这个分类下还没有任务")
+                .font(.system(size: 14))
+                .foregroundColor(Color(white: 0.55))
+            Spacer()
+        }
+    }
+
     private var list: some View {
         List {
-            ForEach(tasks) { task in
+            ForEach(filteredTasks) { task in
                 row(task)
                     .listRowSeparator(.hidden)
                     .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
@@ -207,6 +268,10 @@ struct DownloadsView: View {
     @ViewBuilder
     private func trailingAction(_ task: DownloadTask) -> some View {
         switch task.status {
+        case .queued:
+            Image(systemName: "clock")
+                .font(.system(size: 20))
+                .foregroundColor(Color(white: 0.55))
         case .running:
             Button {
                 downloadManager.pause(task)
@@ -240,6 +305,8 @@ struct DownloadsView: View {
 
     private func statusText(_ task: DownloadTask) -> String {
         switch task.status {
+        case .queued:
+            return "排队中 · 等待空闲"
         case .running:
             let pct = Int(task.progress * 100)
             let base = task.item.kind == .hls ? "m3u8 合成中 \(pct)%" : "\(pct)%"
@@ -343,7 +410,7 @@ struct DownloadsView: View {
         if allSelected {
             selected.removeAll()
         } else {
-            selected = Set(tasks.map { $0.id })
+            selected = Set(filteredTasks.map { $0.id })
         }
     }
 
