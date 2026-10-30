@@ -29,6 +29,17 @@ struct ResourceItem: Identifiable, Equatable, Hashable {
             case .live:  return "paperclip"
             }
         }
+
+        /// 预览条上的角标短文本
+        var shortTag: String {
+            switch self {
+            case .video: return "视频"
+            case .audio: return "音频"
+            case .image: return "图片"
+            case .hls:   return "M3U"
+            case .live:  return "文件"
+            }
+        }
     }
 
     let id = UUID()

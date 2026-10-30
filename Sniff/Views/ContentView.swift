@@ -39,10 +39,11 @@ struct ContentView: View {
             .tabItem { Label("工具", systemImage: "square.grid.2x2") }
 
             NavigationStack {
-                SiteListView(webViewStore: webViewStore,
-                             resourceStore: resourceStore,
-                             downloadManager: downloadManager,
-                             siteStore: siteStore)
+                BrowserView(webViewStore: webViewStore,
+                            resourceStore: resourceStore,
+                            downloadManager: downloadManager,
+                            siteStore: siteStore)
+                    .navigationBarHidden(true)
             }
             .tabItem { Label("浏览", systemImage: "safari") }
 

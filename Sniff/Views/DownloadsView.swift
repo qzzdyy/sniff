@@ -9,13 +9,11 @@ struct DownloadsView: View {
     @State private var selected = Set<UUID>()
     @State private var shareItems: [Any] = []
     @State private var previewItem: ResourceItem?
-    @State private var taskFilter: TaskFilter = .all
+    @State private var taskFilter: TaskFilter = .active
 
     enum TaskFilter: String, CaseIterable, Identifiable {
-        case all = "全部"
         case active = "进行中"
         case done = "已完成"
-        case failed = "失败"
         var id: String { rawValue }
     }
 
@@ -25,23 +23,17 @@ struct DownloadsView: View {
 
     private var filteredTasks: [DownloadTask] {
         switch taskFilter {
-        case .all:
-            return tasks
         case .active:
-            return tasks.filter { $0.isRunning || $0.isQueued || $0.isPaused }
+            return tasks.filter { !$0.isDone }
         case .done:
             return tasks.filter { $0.isDone }
-        case .failed:
-            return tasks.filter { if case .failed = $0.status { return true } else { return false } }
         }
     }
 
     private func count(for filter: TaskFilter) -> Int {
         switch filter {
-        case .all: return tasks.count
-        case .active: return tasks.filter { $0.isRunning || $0.isQueued || $0.isPaused }.count
+        case .active: return tasks.filter { !$0.isDone }.count
         case .done: return tasks.filter { $0.isDone }.count
-        case .failed: return tasks.filter { if case .failed = $0.status { return true } else { return false } }.count
         }
     }
 

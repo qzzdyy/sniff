@@ -71,11 +71,12 @@ struct ToolboxView: View {
                 }
             }
         }
-        .navigationDestination(isPresented: $showBrowser) {
-            SiteListView(webViewStore: webViewStore,
-                         resourceStore: resourceStore,
-                         downloadManager: downloadManager,
-                         siteStore: siteStore)
+        .fullScreenCover(isPresented: $showBrowser) {
+            BrowserView(webViewStore: webViewStore,
+                        resourceStore: resourceStore,
+                        downloadManager: downloadManager,
+                        siteStore: siteStore,
+                        onClose: { showBrowser = false })
         }
         .sheet(isPresented: $showSettings) {
             SettingsView(webViewStore: webViewStore,

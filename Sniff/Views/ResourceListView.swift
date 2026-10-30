@@ -18,6 +18,7 @@ struct ResourceListView: View {
     @State private var batchBusy = false
     @State private var batchText = ""
     @State private var showDeleteConfirm = false
+    @State private var pendingM3: ResourceItem?
 
     private let accent = Color(red: 0.11, green: 0.11, blue: 0.12)
 
@@ -94,6 +95,11 @@ struct ResourceListView: View {
         )) {
             DocumentExporter(urls: exportingURLs ?? [])
         }
+        .sheet(item: $pendingM3) { item in
+            M3CreateView(sourceURL: item.url,
+                         suggestedName: item.pageTitle ?? item.displayName,
+                         downloadManager: downloadManager)
+        }
         .confirmationDialog("删除选中的 \(selected.count) 项？", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
             Button("删除", role: .destructive) { batchDelete() }
             Button("取消", role: .cancel) {}
@@ -135,18 +141,21 @@ struct ResourceListView: View {
     }
 
     private var filterBar: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                chip(title: "全部", count: resourceStore.items.count, active: filter == nil) { filter = nil }
-                ForEach(ResourceItem.Kind.allCases, id: \.self) { kind in
-                    let n = resourceStore.items.filter { $0.kind == kind }.count
-                    if n > 0 {
-                        chip(title: kind.title, count: n, active: filter == kind) { filter = kind }
+        HStack(spacing: 0) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    chip(title: "全部", count: resourceStore.items.count, active: filter == nil) { filter = nil }
+                    ForEach(ResourceItem.Kind.allCases, id: \.self) { kind in
+                        let n = resourceStore.items.filter { $0.kind == kind }.count
+                        if n > 0 {
+                            chip(title: kind.title, count: n, active: filter == kind) { filter = kind }
+                        }
                     }
                 }
+                .padding(.leading, 16)
+                .padding(.trailing, 8)
+                .padding(.vertical, 10)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
         }
         .background(Color(white: 0.985))
     }
@@ -306,8 +315,12 @@ struct ResourceListView: View {
             .buttonStyle(.plain)
         } else {
             Button {
-                downloadManager.download(item)
-                showToast("开始下载：\(item.displayName)")
+                if item.kind == .hls {
+                    pendingM3 = item
+                } else {
+                    downloadManager.download(item)
+                    showToast("开始下载：\(item.displayName)")
+                }
             } label: {
                 HStack(spacing: 4) {
                     Image(systemName: "arrow.down.circle").font(.system(size: 13, weight: .medium))

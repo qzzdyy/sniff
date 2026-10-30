@@ -36,10 +36,16 @@ struct SiteBookmark: Identifiable, Codable, Equatable, Hashable {
 final class SiteStore: ObservableObject {
     @Published private(set) var sites: [SiteBookmark] = []
     @Published private(set) var recents: [SiteBookmark] = []
+    /// 完整浏览历史（对应原版 ins.b.history）
+    @Published private(set) var history: [SiteBookmark] = []
+    /// 主页翻页信号：底栏点「书签」时递增，主页据此切到书签页
+    @Published var scrollToBookmarks: Int = 0
 
     private let sitesKey = "sniff.sites.v1"
     private let recentsKey = "sniff.recents.v1"
+    private let historyKey = "sniff.history.v1"
     private let maxRecents = 8
+    private let maxHistory = 200
 
     init() {
         load()
@@ -69,6 +75,18 @@ final class SiteStore: ObservableObject {
         persistRecents()
     }
 
+    func update(id: UUID, title: String, urlString: String) {
+        guard let normalized = Self.normalize(urlString),
+              let idx = sites.firstIndex(where: { $0.id == id }) else { return }
+        var name = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        if name.isEmpty {
+            name = URL(string: normalized)?.host ?? normalized
+        }
+        sites[idx].title = name
+        sites[idx].urlString = normalized
+        persistSites()
+    }
+
     func move(from: IndexSet, to: Int) {
         sites.move(fromOffsets: from, toOffset: to)
         persistSites()
@@ -92,6 +110,28 @@ final class SiteStore: ObservableObject {
                                 symbol: "globe",
                                 tintHex: "3A3A3C")
         touch(site)
+        appendHistory(site)
+    }
+
+    // MARK: - 历史记录
+
+    private func appendHistory(_ site: SiteBookmark) {
+        history.removeAll { $0.urlString == site.urlString }
+        history.insert(site, at: 0)
+        if history.count > maxHistory {
+            history = Array(history.prefix(maxHistory))
+        }
+        persistHistory()
+    }
+
+    func removeHistory(at offsets: IndexSet) {
+        history.remove(atOffsets: offsets)
+        persistHistory()
+    }
+
+    func clearHistory() {
+        history.removeAll()
+        persistHistory()
     }
 
     // MARK: - 持久化
@@ -105,6 +145,16 @@ final class SiteStore: ObservableObject {
         if let data = UserDefaults.standard.data(forKey: recentsKey),
            let list = try? decoder.decode([SiteBookmark].self, from: data) {
             recents = list
+        }
+        if let data = UserDefaults.standard.data(forKey: historyKey),
+           let list = try? decoder.decode([SiteBookmark].self, from: data) {
+            history = list
+        }
+    }
+
+    private func persistHistory() {
+        if let data = try? JSONEncoder().encode(history) {
+            UserDefaults.standard.set(data, forKey: historyKey)
         }
     }
 
