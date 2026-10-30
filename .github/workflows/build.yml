@@ -9,15 +9,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: 解压工程
-        run: unzip -q Sniff.zip -d s
-
       - name: 准备 FFmpeg 框架
         run: |
-          cd s/Sniff
           mkdir -p Vendor
           set +e
-          echo "== 尝试从 release 下载 Frameworks.zip =="
+          echo "== 从 release 下载 Frameworks.zip =="
           curl -fL --retry 2 --max-time 900 -o /tmp/fw.zip \
             "https://github.com/xpcapital/ffmpeg-kit-full-gpl/releases/download/6.0/Frameworks.zip"
           R=$?
@@ -38,14 +34,12 @@ jobs:
 
       - name: 生成工程
         run: |
-          cd s/Sniff
           brew install xcodegen > brew.log 2>&1
           xcodegen generate
           xcodebuild -list -project Sniff.xcodeproj
 
       - name: 构建并打包未签名 IPA
         run: |
-          cd s/Sniff
           set +e
           xcodebuild build -project Sniff.xcodeproj -scheme Sniff -configuration Release \
             -derivedDataPath dd -destination 'generic/platform=iOS' \
@@ -69,12 +63,10 @@ jobs:
           ls -lh Sniff.ipa
           echo "---- 应用体积 ----"
           du -sh Payload/Sniff.app
-          echo "---- 二进制 ----"
-          ls -lh Payload/Sniff.app/Sniff
           echo "---- ffmpeg 符号 ----"
           strings Payload/Sniff.app/Sniff | grep -c "libavformat\|FFmpegKit" || echo 0
 
       - uses: actions/upload-artifact@v4
         with:
           name: ipa
-          path: s/Sniff/Sniff.ipa
+          path: Sniff.ipa
