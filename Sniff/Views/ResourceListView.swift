@@ -289,6 +289,10 @@ struct ResourceListView: View {
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundColor(accent)
                 .frame(width: 44)
+        } else if let task, case .queued = task.status {
+            Text("排队中")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(Color(white: 0.5))
         } else if let task, case .paused = task.status {
             Button {
                 downloadManager.resume(task)
@@ -318,6 +322,10 @@ struct ResourceListView: View {
     @ViewBuilder
     private func taskStatus(_ task: DownloadTask, item: ResourceItem) -> some View {
         switch task.status {
+        case .queued:
+            Text("排队中，空闲后自动开始")
+                .font(.caption)
+                .foregroundColor(Color(white: 0.5))
         case .running:
             ProgressView(value: min(max(task.progress, 0), 1))
                 .progressViewStyle(.linear)
