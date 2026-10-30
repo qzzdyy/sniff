@@ -2,6 +2,12 @@ import Foundation
 import UIKit
 import AVFoundation
 
+/// 转换失败原因（Result 的 Failure 必须符合 Error）
+struct MediaError: Error {
+    let message: String
+    init(_ message: String) { self.message = message }
+}
+
 /// 工具箱里的实际转换能力（全部走 FFmpegKit，少量用系统框架）
 enum MediaConverter {
 
@@ -39,7 +45,7 @@ enum MediaConverter {
     // MARK: - 视频
 
     /// 转 MP4：能直拷就直拷，不行再重编码
-    static func videoToMP4(_ input: URL, completion: @escaping (Result<URL, String>) -> Void) {
+    static func videoToMP4(_ input: URL, completion: @escaping (Result<URL, MediaError>) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             let out = outURL(for: input, suffix: "", ext: "mp4")
             try? FileManager.default.removeItem(at: out)
@@ -52,7 +58,7 @@ enum MediaConverter {
     }
 
     /// 压缩：限制高度，CRF 26，视频体积通常能降一半以上
-    static func videoCompress(_ input: URL, height: Int = 720, completion: @escaping (Result<URL, String>) -> Void) {
+    static func videoCompress(_ input: URL, height: Int = 720, completion: @escaping (Result<URL, MediaError>) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             let out = outURL(for: input, suffix: "_压缩", ext: "mp4")
             try? FileManager.default.removeItem(at: out)
@@ -62,7 +68,7 @@ enum MediaConverter {
     }
 
     /// 按目标体积压：用时长反推目标码率
-    static func videoCompress(toSizeMB mb: Double, input: URL, completion: @escaping (Result<URL, String>) -> Void) {
+    static func videoCompress(toSizeMB mb: Double, input: URL, completion: @escaping (Result<URL, MediaError>) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             let dur = duration(of: input)
             guard dur > 1 else { return fail(completion) }
@@ -77,7 +83,7 @@ enum MediaConverter {
     }
 
     /// 提取音频为 m4a
-    static func extractAudio(_ input: URL, completion: @escaping (Result<URL, String>) -> Void) {
+    static func extractAudio(_ input: URL, completion: @escaping (Result<URL, MediaError>) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             let out = outURL(for: input, suffix: "_音频", ext: "m4a")
             try? FileManager.default.removeItem(at: out)
@@ -87,7 +93,7 @@ enum MediaConverter {
     }
 
     /// 视频转 GIF
-    static func videoToGIF(_ input: URL, completion: @escaping (Result<URL, String>) -> Void) {
+    static func videoToGIF(_ input: URL, completion: @escaping (Result<URL, MediaError>) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             let out = outURL(for: input, suffix: "", ext: "gif")
             try? FileManager.default.removeItem(at: out)
@@ -97,7 +103,7 @@ enum MediaConverter {
     }
 
     /// GIF 转 MP4
-    static func gifToMP4(_ input: URL, completion: @escaping (Result<URL, String>) -> Void) {
+    static func gifToMP4(_ input: URL, completion: @escaping (Result<URL, MediaError>) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             let out = outURL(for: input, suffix: "", ext: "mp4")
             try? FileManager.default.removeItem(at: out)
@@ -107,7 +113,7 @@ enum MediaConverter {
     }
 
     /// 从视频抽一帧当封面
-    static func grabFrame(_ input: URL, completion: @escaping (Result<URL, String>) -> Void) {
+    static func grabFrame(_ input: URL, completion: @escaping (Result<URL, MediaError>) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             let out = outURL(for: input, suffix: "_封面", ext: "jpg")
             try? FileManager.default.removeItem(at: out)
@@ -119,7 +125,7 @@ enum MediaConverter {
     // MARK: - 音频
 
     /// 音频格式转换（mp3 / m4a / wav / aac）
-    static func audioConvert(_ input: URL, to ext: String, completion: @escaping (Result<URL, String>) -> Void) {
+    static func audioConvert(_ input: URL, to ext: String, completion: @escaping (Result<URL, MediaError>) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             let out = outURL(for: input, suffix: "", ext: ext)
             try? FileManager.default.removeItem(at: out)
@@ -134,7 +140,7 @@ enum MediaConverter {
     // MARK: - 图片
 
     static func imageConvert(_ input: URL, to ext: String, quality: CGFloat = 0.9,
-                             completion: @escaping (Result<URL, String>) -> Void) {
+                             completion: @escaping (Result<URL, MediaError>) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             guard let data = try? Data(contentsOf: input),
                   let img = UIImage(data: data) else { return fail(completion, "无法读取图片") }
@@ -154,7 +160,7 @@ enum MediaConverter {
 
     /// 等比缩放到最长边 pixel
     static func imageResize(_ input: URL, maxPixel: CGFloat,
-                            completion: @escaping (Result<URL, String>) -> Void) {
+                            completion: @escaping (Result<URL, MediaError>) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             guard let data = try? Data(contentsOf: input),
                   let img = UIImage(data: data) else { return fail(completion, "无法读取图片") }
@@ -186,12 +192,12 @@ enum MediaConverter {
         return seconds.isFinite ? seconds : 0
     }
 
-    private static func done(_ url: URL, _ completion: @escaping (Result<URL, String>) -> Void) {
+    private static func done(_ url: URL, _ completion: @escaping (Result<URL, MediaError>) -> Void) {
         DispatchQueue.main.async { completion(.success(url)) }
     }
 
-    private static func fail(_ completion: @escaping (Result<URL, String>) -> Void, _ msg: String? = nil) {
+    private static func fail(_ completion: @escaping (Result<URL, MediaError>) -> Void, _ msg: String? = nil) {
         let text = msg ?? lastError
-        DispatchQueue.main.async { completion(.failure(text)) }
+        DispatchQueue.main.async { completion(.failure(MediaError(text))) }
     }
 }

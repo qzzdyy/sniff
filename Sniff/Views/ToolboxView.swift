@@ -169,20 +169,18 @@ struct ToolboxView: View {
         running = true
         let choice = pendingChoice
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-            MediaConverter.perform(tool: tool, choice: choice, input: url) { result in
-                if scoped { url.stopAccessingSecurityScopedResource() }
-                running = false
-                switch result {
-                case .success(let out):
-                    lastOutput = out
-                    showToast("完成：\(out.lastPathComponent)")
-                    if compressDoneAlert { UINotificationFeedbackGenerator().notificationOccurred(.success) }
-                case .failure(let msg):
-                    showToast("失败：\(msg.prefix(60))")
-                }
-                pendingTool = nil
+        MediaConverter.perform(tool: tool, choice: choice, input: url) { result in
+            if scoped { url.stopAccessingSecurityScopedResource() }
+            running = false
+            switch result {
+            case .success(let out):
+                lastOutput = out
+                showToast("完成：\(out.lastPathComponent)")
+                if compressDoneAlert { UINotificationFeedbackGenerator().notificationOccurred(.success) }
+            case .failure(let err):
+                showToast("失败：\(err.message.prefix(60))")
             }
+            pendingTool = nil
         }
     }
 
@@ -368,7 +366,7 @@ enum ToolAction: String, Identifiable, CaseIterable {
 
 extension MediaConverter {
     static func perform(tool: ToolAction, choice: String, input: URL,
-                        completion: @escaping (Result<URL, String>) -> Void) {
+                        completion: @escaping (Result<URL, MediaError>) -> Void) {
         switch tool {
         case .videoToMP4:
             videoToMP4(input, completion: completion)
@@ -392,7 +390,7 @@ extension MediaConverter {
         case .audioConvert:
             audioConvert(input, to: choice.isEmpty ? "m4a" : choice, completion: completion)
         default:
-            completion(.failure("暂未实现"))
+            completion(.failure(MediaError("暂未实现")))
         }
     }
 }
