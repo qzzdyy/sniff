@@ -8,6 +8,8 @@ struct SettingsView: View {
 
     @AppStorage("uaPreset") private var uaPresetRaw: String = UserAgentPreset.iphone.rawValue
     @AppStorage("maxConcurrent") private var maxConcurrent = 4
+    @AppStorage("maxConcurrentTasks") private var maxConcurrentTasks = 1
+    @AppStorage("downloadMode") private var downloadMode = "balance"
     @AppStorage("speedLimitKBps") private var speedLimitKBps = 0
     @State private var toast: String?
     @State private var cacheText = "计算中…"
@@ -47,7 +49,23 @@ struct SettingsView: View {
                 }
 
                 Section("下载") {
-                    Picker("并发分片数", selection: $maxConcurrent) {
+                    Picker("模式", selection: $downloadMode) {
+                        Text("均衡").tag("balance")
+                        Text("速度优先").tag("speed")
+                    }
+                    .onChange(of: downloadMode) { mode in
+                        DownloadSettings.applyMode(speedFirst: mode == "speed")
+                        maxConcurrentTasks = DownloadSettings.maxConcurrentTasks
+                        maxConcurrent = DownloadSettings.maxConcurrent
+                        showToast(mode == "speed" ? "已切换到速度优先" : "已切换到均衡")
+                    }
+
+                    Picker("同时下载任务数", selection: $maxConcurrentTasks) {
+                        Text("1（省内存）").tag(1)
+                        Text("2").tag(2)
+                        Text("3（最快）").tag(3)
+                    }
+                    Picker("单任务分片数", selection: $maxConcurrent) {
                         Text("1（最省流量）").tag(1)
                         Text("2").tag(2)
                         Text("4（推荐）").tag(4)
@@ -60,7 +78,8 @@ struct SettingsView: View {
                         Text("5 MB/s").tag(5120)
                         Text("10 MB/s").tag(10240)
                     }
-                    Text("下载速度取决于服务器与网络，手机算力影响很小；能明显提速的是「多分片并发」。限速对 m3u8 分片下载生效，从下一次下载开始应用。")
+                    LabeledContent("设备最大线程数", value: "\(DownloadSettings.deviceMaxThreads)")
+                    Text("总线程数 = 同时下载任务数 × 单任务分片数，当前 \(maxConcurrentTasks * maxConcurrent) 条，设备上限 \(DownloadSettings.deviceMaxThreads)。调太高不会更快，反而容易被服务器限流。限速对下一次下载生效。")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
