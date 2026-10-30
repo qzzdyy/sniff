@@ -22,8 +22,13 @@ struct BrowserView: View {
             addressBar
             toolbar
             Divider()
-            SniffWebView(webViewStore: webViewStore, resourceStore: resourceStore)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            ZStack(alignment: .top) {
+                SniffWebView(webViewStore: webViewStore, resourceStore: resourceStore)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                if let err = webViewStore.loadError {
+                    errorBar(err)
+                }
+            }
         }
         .background(Color.white)
         .sheet(isPresented: $showResources, onDismiss: { resourceStore.resetBadge() }) {
@@ -45,6 +50,45 @@ struct BrowserView: View {
             let text = url?.absoluteString ?? ""
             addressText = (text == "about:blank") ? "" : text
         }
+    }
+
+    // MARK: - 加载失败提示
+
+    private func errorBar(_ text: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 13))
+                .foregroundColor(.orange)
+            Text(text)
+                .font(.system(size: 12))
+                .foregroundColor(.primary)
+                .lineLimit(2)
+            Spacer(minLength: 4)
+            Button("重试") {
+                webViewStore.loadError = nil
+                webViewStore.reload()
+            }
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundColor(accent)
+            Button {
+                webViewStore.loadError = nil
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(Color(white: 0.5))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 9)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color(red: 1.0, green: 0.97, blue: 0.92))
+                .shadow(color: .black.opacity(0.08), radius: 6, y: 2)
+        )
+        .padding(.horizontal, 12)
+        .padding(.top, 8)
+        .transition(.move(edge: .top).combined(with: .opacity))
     }
 
     // MARK: - 地址栏

@@ -31,6 +31,14 @@ struct ContentView: View {
     var body: some View {
         TabView {
             NavigationStack {
+                ToolboxView(webViewStore: webViewStore,
+                            resourceStore: resourceStore,
+                            downloadManager: downloadManager,
+                            siteStore: siteStore)
+            }
+            .tabItem { Label("工具", systemImage: "square.grid.2x2") }
+
+            NavigationStack {
                 SiteListView(webViewStore: webViewStore,
                              resourceStore: resourceStore,
                              downloadManager: downloadManager,
@@ -40,9 +48,6 @@ struct ContentView: View {
 
             DownloadsView(downloadManager: downloadManager)
                 .tabItem { Label("下载", systemImage: "arrow.down.circle") }
-
-            SettingsView(webViewStore: webViewStore, resourceStore: resourceStore)
-                .tabItem { Label("设置", systemImage: "gearshape") }
         }
         .tint(accent)
     }

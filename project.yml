@@ -36,6 +36,8 @@ targets:
           - UIInterfaceOrientationLandscapeRight
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: true
+          NSAllowsArbitraryLoadsInWebContent: true
+          NSAllowsLocalNetworking: true
         NSPhotoLibraryAddUsageDescription: 需要相册写入权限，用于保存嗅探到的图片和视频
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true

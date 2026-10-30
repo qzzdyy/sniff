@@ -1,20 +1,18 @@
 import SwiftUI
 import WebKit
 
-/// 设置页：模拟设备、清理 Cookie / 缓存、清空嗅探记录
+/// 设置页（按小工具集截图还原：分组卡片 + 左侧线框图标 + 右侧箭头/值）
 struct SettingsView: View {
     @ObservedObject var webViewStore: WebViewStore
     @ObservedObject var resourceStore: ResourceStore
+    @ObservedObject var downloadManager: DownloadManager
 
-    @AppStorage("uaPreset") private var uaPresetRaw: String = UserAgentPreset.iphone.rawValue
-    @AppStorage("maxConcurrent") private var maxConcurrent = 4
-    @AppStorage("maxConcurrentTasks") private var maxConcurrentTasks = 1
-    @AppStorage("downloadMode") private var downloadMode = "balance"
-    @AppStorage("speedLimitKBps") private var speedLimitKBps = 0
+    @Environment(\.dismiss) private var dismiss
+    @AppStorage("compressDoneAlert") private var compressDoneAlert = true
+    @AppStorage("floatWindow") private var floatWindow = false
+
+    @State private var cacheText = "0 B"
     @State private var toast: String?
-    @State private var cacheText = "计算中…"
-
-    private let accent = Color(red: 0.11, green: 0.11, blue: 0.12)
 
     private var version: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
@@ -23,115 +21,153 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("模拟设备") {
-                    ForEach(UserAgentPreset.allCases) { preset in
-                        Button {
-                            uaPresetRaw = preset.rawValue
-                            webViewStore.applyUserAgent()
-                            showToast("已切换为 \(preset.title)")
-                        } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(preset.title).foregroundColor(.primary)
-                                    Text(preset.detail)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                                Spacer()
-                                if uaPresetRaw == preset.rawValue {
-                                    Image(systemName: "checkmark")
-                                        .foregroundColor(accent)
-                                        .font(.system(size: 14, weight: .semibold))
-                                }
-                            }
+                Section {
+                    row("清除缓存", "trash", value: cacheText) { clearCache() }
+                }
+
+                Section("探索灵感") {
+                    NavigationLink { SnapshotSettings() } label: {
+                        rowLabel("快照", "camera", value: "0")
+                    }
+                    NavigationLink { FilterSettings() } label: {
+                        rowLabel("默认筛选", "line.3.horizontal.decrease.circle")
+                    }
+                    NavigationLink { BrowserSettings(webViewStore: webViewStore, resourceStore: resourceStore) } label: {
+                        rowLabel("浏览器", "safari")
+                    }
+                    NavigationLink { MoreSettings() } label: {
+                        rowLabel("更多设置", "ellipsis")
+                    }
+                }
+
+                Section("探索灵感 - M3U8") {
+                    Toggle(isOn: $floatWindow) {
+                        rowLabel("浮窗显示 / 隐藏", "square")
+                    }
+                    .tint(Color(red: 0.20, green: 0.78, blue: 0.35))
+
+                    NavigationLink { MultiTaskSettings(downloadManager: downloadManager) } label: {
+                        rowLabel("任务管理", "list.bullet.indent")
+                    }
+                    NavigationLink { MultiTaskAdvanced() } label: {
+                        rowLabel("多任务设置", "square.stack.3d.down.right")
+                    }
+                }
+
+                Section("小工具们") {
+                    NavigationLink { HistoryView(resourceStore: resourceStore) } label: {
+                        rowLabel("历史记录", "clock")
+                    }
+                    Toggle(isOn: $compressDoneAlert) {
+                        rowLabel("视频压缩完成后提示", "alarm")
+                    }
+                    .tint(Color(red: 0.20, green: 0.78, blue: 0.35))
+                }
+
+                Section("反馈") {
+                    NavigationLink { SimpleTextPage(title: "评论", text: "还没有接入评论服务。\n\n想说什么可以直接在聊天里告诉开发者。") } label: {
+                        rowLabel("评论", "hand.thumbsup")
+                    }
+                    NavigationLink { HelpPage() } label: {
+                        rowLabel("帮助", "questionmark.circle")
+                    }
+                    NavigationLink { SimpleTextPage(title: "反馈", text: "遇到问题请附上：\n\n1. 打不开的网址\n2. 页面顶部出现的错误提示（如果有）\n3. iOS 版本和机型") } label: {
+                        rowLabel("反馈", "envelope")
+                    }
+                    NavigationLink { SimpleTextPage(title: "语言", text: "当前仅支持简体中文。") } label: {
+                        HStack {
+                            rowLabel("语言", "globe")
+                            Spacer()
+                            Text("简体中文")
+                                .font(.system(size: 16))
+                                .foregroundColor(.secondary)
                         }
                     }
+                    NavigationLink { SimpleTextPage(title: "Lab", text: "实验性功能会先放在这里。\n\n当前实验项：\n· 强制桌面 UA\n· 嗅探结果按域名归并") } label: {
+                        rowLabel("Lab", "flask")
+                    }
+                    NavigationLink { OpenSourcePage() } label: {
+                        rowLabel("开源", "circle")
+                    }
                 }
 
-                Section("下载") {
-                    Picker("模式", selection: $downloadMode) {
-                        Text("均衡").tag("balance")
-                        Text("速度优先").tag("speed")
-                    }
-                    .onChange(of: downloadMode) { mode in
-                        DownloadSettings.applyMode(speedFirst: mode == "speed")
-                        maxConcurrentTasks = DownloadSettings.maxConcurrentTasks
-                        maxConcurrent = DownloadSettings.maxConcurrent
-                        showToast(mode == "speed" ? "已切换到速度优先" : "已切换到均衡")
-                    }
-
-                    Picker("同时下载任务数", selection: $maxConcurrentTasks) {
-                        Text("1（省内存）").tag(1)
-                        Text("2").tag(2)
-                        Text("3（最快）").tag(3)
-                    }
-                    Picker("单任务分片数", selection: $maxConcurrent) {
-                        Text("1（最省流量）").tag(1)
-                        Text("2").tag(2)
-                        Text("4（推荐）").tag(4)
-                        Text("8（最快）").tag(8)
-                    }
-                    Picker("限速", selection: $speedLimitKBps) {
-                        Text("不限速").tag(0)
-                        Text("1 MB/s").tag(1024)
-                        Text("2 MB/s").tag(2048)
-                        Text("5 MB/s").tag(5120)
-                        Text("10 MB/s").tag(10240)
-                    }
-                    LabeledContent("设备最大线程数", value: "\(DownloadSettings.deviceMaxThreads)")
-                    Text("总线程数 = 同时下载任务数 × 单任务分片数，当前 \(maxConcurrentTasks * maxConcurrent) 条，设备上限 \(DownloadSettings.deviceMaxThreads)。调太高不会更快，反而容易被服务器限流。限速对下一次下载生效。")
-                        .font(.caption)
+                Section {
+                } footer: {
+                    VStack(spacing: 6) {
+                        Text("版本: \(version)")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                        HStack(spacing: 14) {
+                            Text("隐私权政策")
+                            Text("使用条款")
+                        }
+                        .font(.system(size: 12))
                         .foregroundColor(.secondary)
-                }
-
-                Section("清理") {
-                    Button("清除 Cookie") { clearCookies() }
-                    Button("清除网页缓存") { clearCache() }
-                    Button("清空嗅探记录") {
-                        resourceStore.clear()
-                        showToast("已清空嗅探记录")
                     }
-                }
-
-                Section("存储") {
-                    LabeledContent("网页缓存", value: cacheText)
-                }
-
-                Section("关于") {
-                    LabeledContent("版本", value: version)
-                    LabeledContent("嗅探内核", value: "WKWebView 资源拦截 + JS 注入（DOM / XHR / 资源时间线 / 媒体事件）")
-                    LabeledContent("存储位置", value: "「文件」App / 嗅探")
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 4)
                 }
             }
-            .navigationTitle("设置")
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("取消") { dismiss() }
+                        .foregroundColor(Color(red: 0.11, green: 0.11, blue: 0.12))
+                }
+            }
             .onAppear(perform: updateCacheText)
             .overlay(alignment: .bottom) {
                 if let toast {
                     Text(toast)
                         .font(.footnote)
                         .foregroundColor(.white)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
+                        .padding(.horizontal, 16).padding(.vertical, 10)
                         .background(Capsule().fill(Color.black.opacity(0.82)))
-                        .padding(.bottom, 24)
+                        .padding(.bottom, 26)
                 }
             }
         }
     }
 
+    // MARK: - 行
+
+    private func row(_ title: String, _ symbol: String, value: String? = nil,
+                     action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack {
+                rowLabel(title, symbol)
+                Spacer()
+                if let value {
+                    Text(value).font(.system(size: 16)).foregroundColor(.secondary)
+                }
+            }
+        }
+    }
+
+    private func rowLabel(_ title: String, _ symbol: String, value: String? = nil) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: symbol)
+                .font(.system(size: 17, weight: .regular))
+                .foregroundColor(Color(white: 0.28))
+                .frame(width: 24)
+            Text(title)
+                .font(.system(size: 17))
+                .foregroundColor(.primary)
+            if let value {
+                Text(value)
+                    .font(.system(size: 16))
+                    .foregroundColor(.secondary)
+                    .padding(.leading, 2)
+            }
+        }
+    }
+
+    // MARK: - 行为
+
     private func updateCacheText() {
         let bytes = URLCache.shared.currentDiskUsage + URLCache.shared.currentMemoryUsage
         cacheText = ByteCountFormatter.string(fromByteCount: Int64(bytes), countStyle: .file)
-    }
-
-    private func clearCookies() {
-        let store = WKWebsiteDataStore.default()
-        store.httpCookieStore.getAllCookies { cookies in
-            for cookie in cookies {
-                store.httpCookieStore.delete(cookie)
-            }
-            DispatchQueue.main.async { showToast("Cookie 已清除") }
-        }
     }
 
     private func clearCache() {
@@ -141,15 +177,295 @@ struct SettingsView: View {
             URLCache.shared.removeAllCachedResponses()
             DispatchQueue.main.async {
                 updateCacheText()
-                showToast("缓存已清除")
+                withAnimation { toast = "缓存已清除" }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    withAnimation { toast = nil }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - 子页
+
+struct BrowserSettings: View {
+    @ObservedObject var webViewStore: WebViewStore
+    @ObservedObject var resourceStore: ResourceStore
+    @AppStorage("uaPreset") private var uaPresetRaw: String = UserAgentPreset.iphone.rawValue
+    @State private var toast: String?
+
+    var body: some View {
+        Form {
+            Section("模拟设备") {
+                ForEach(UserAgentPreset.allCases) { preset in
+                    Button {
+                        uaPresetRaw = preset.rawValue
+                        webViewStore.applyUserAgent()
+                        withAnimation { toast = "已切换为 \(preset.title)" }
+                    } label: {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(preset.title).foregroundColor(.primary)
+                                Text(preset.detail).font(.caption).foregroundColor(.secondary)
+                            }
+                            Spacer()
+                            if uaPresetRaw == preset.rawValue {
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(Color(red: 0.11, green: 0.11, blue: 0.12))
+                            }
+                        }
+                    }
+                }
+            }
+
+            Section("清理") {
+                Button("清除 Cookie") { clearCookies() }
+                Button("清空嗅探记录") {
+                    resourceStore.clear()
+                    toast = "已清空"
+                }
+            }
+
+            Section {
+                Text("部分站点会按 UA 下发不同页面。切换后需要重新加载网页才生效。")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .navigationTitle("浏览器")
+        .navigationBarTitleDisplayMode(.inline)
+        .overlay(alignment: .bottom) {
+            if let toast {
+                Text(toast).font(.footnote).foregroundColor(.white)
+                    .padding(.horizontal, 14).padding(.vertical, 9)
+                    .background(Capsule().fill(Color.black.opacity(0.8)))
+                    .padding(.bottom, 24)
             }
         }
     }
 
-    private func showToast(_ text: String) {
-        withAnimation { toast = text }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            withAnimation { toast = nil }
+    private func clearCookies() {
+        let store = WKWebsiteDataStore.default()
+        store.httpCookieStore.getAllCookies { cookies in
+            for c in cookies { store.httpCookieStore.delete(c) }
+            DispatchQueue.main.async { toast = "Cookie 已清除" }
         }
+    }
+}
+
+struct MultiTaskSettings: View {
+    @ObservedObject var downloadManager: DownloadManager
+
+    var body: some View {
+        Form {
+            if downloadManager.tasks.isEmpty {
+                Section {
+                    Text("还没有任务")
+                        .font(.callout)
+                        .foregroundColor(.secondary)
+                }
+            } else {
+                Section("全部任务") {
+                    ForEach(downloadManager.tasks) { task in
+                        HStack {
+                            Text(task.item.url.lastPathComponent)
+                                .font(.callout)
+                                .lineLimit(1)
+                            Spacer()
+                            Text(task.status.text)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+            }
+            Section {
+                Text("完整的任务列表在「下载」页。")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .navigationTitle("任务管理")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+struct MultiTaskAdvanced: View {
+    @AppStorage("maxConcurrent") private var maxConcurrent = 4
+    @AppStorage("maxConcurrentTasks") private var maxConcurrentTasks = 1
+    @AppStorage("downloadMode") private var downloadMode = "balance"
+    @AppStorage("speedLimitKBps") private var speedLimitKBps = 0
+
+    var body: some View {
+        Form {
+            Section("模式") {
+                Picker("调度", selection: $downloadMode) {
+                    Text("均衡").tag("balance")
+                    Text("速度优先").tag("speed")
+                }
+                .pickerStyle(.segmented)
+                .onChange(of: downloadMode) { mode in
+                    DownloadSettings.applyMode(speedFirst: mode == "speed")
+                    maxConcurrentTasks = DownloadSettings.maxConcurrentTasks
+                    maxConcurrent = DownloadSettings.maxConcurrent
+                }
+                Picker("同时下载任务数", selection: $maxConcurrentTasks) {
+                    Text("1（省内存）").tag(1)
+                    Text("2").tag(2)
+                    Text("3（最快）").tag(3)
+                }
+                Picker("单任务分片数", selection: $maxConcurrent) {
+                    Text("1").tag(1)
+                    Text("2").tag(2)
+                    Text("4（推荐）").tag(4)
+                    Text("8").tag(8)
+                }
+                Picker("限速", selection: $speedLimitKBps) {
+                    Text("不限速").tag(0)
+                    Text("1 MB/s").tag(1024)
+                    Text("2 MB/s").tag(2048)
+                    Text("5 MB/s").tag(5120)
+                    Text("10 MB/s").tag(10240)
+                }
+                LabeledContent("设备最大线程数", value: "\(DownloadSettings.deviceMaxThreads)")
+            }
+            Section {
+                Text("总线程 = 同时任务数 × 分片数，当前 \(maxConcurrentTasks * maxConcurrent)。超过设备上限不会更快，反而容易被限流。")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .navigationTitle("多任务设置")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+struct SnapshotSettings: View {
+    @State private var autoSnapshot = true
+    var body: some View {
+        Form {
+            Section {
+                Toggle("自动抓取网页快照", isOn: $autoSnapshot)
+            } footer: {
+                Text("快照会在嗅探到视频时同步保存一张页面截图，方便回看。")
+            }
+        }
+        .navigationTitle("快照")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+struct FilterSettings: View {
+    @State private var hideSmall = true
+    @State private var minKB = 50
+    var body: some View {
+        Form {
+            Section {
+                Toggle("隐藏小于阈值的资源", isOn: $hideSmall)
+                Stepper("阈值 \(minKB) KB", value: $minKB, in: 0...2048, step: 50)
+            } footer: {
+                Text("用来过滤掉统计、埋点、1×1 像素这类噪音资源。")
+            }
+        }
+        .navigationTitle("默认筛选")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+struct MoreSettings: View {
+    private var version: String {
+        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
+    }
+    var body: some View {
+        Form {
+            Section("关于") {
+                LabeledContent("版本", value: version)
+                LabeledContent("嗅探内核", value: "WKWebView + JS 注入")
+                LabeledContent("存储位置", value: "「文件」App / 嗅探")
+            }
+            Section {
+                Text("嗅探内核：WKWebView 资源拦截 + JS 注入（DOM / XHR / 资源时间线 / 媒体事件）")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .navigationTitle("更多设置")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+struct HistoryView: View {
+    @ObservedObject var resourceStore: ResourceStore
+    var body: some View {
+        List {
+            if resourceStore.items.isEmpty {
+                Text("暂无记录").foregroundColor(.secondary)
+            } else {
+                ForEach(resourceStore.items) { item in
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(item.url.lastPathComponent.isEmpty ? item.url.host ?? "资源" : item.url.lastPathComponent)
+                            .font(.callout)
+                            .lineLimit(1)
+                        Text(item.kind.title)
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+        }
+        .navigationTitle("历史记录")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+struct OpenSourcePage: View {
+    var body: some View {
+        Form {
+            Section {
+                Text("本项目使用的开源组件：")
+                    .font(.callout)
+                Text("· FFmpeg / FFmpegKit（LGPL / GPL）\n· 界面基于 SwiftUI、WebKit 系统框架")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .navigationTitle("开源")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+struct SimpleTextPage: View {
+    let title: String
+    let text: String
+
+    var body: some View {
+        ScrollView {
+            Text(text)
+                .font(.callout)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(20)
+        }
+        .navigationTitle(title)
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+struct HelpPage: View {
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("网页打不开怎么办").font(.headline)
+                Text("1. 页面顶部如果出现橙色提示条，把上面的文字发出来，那就是真实原因。\n2. 先试「刷新」，再试切换 UA（浏览器 → 模拟设备 → 桌面 Safari）。\n3. 国内站点多数要求 HTTPS，纯 HTTP 地址可能被拦。\n4. 部分站点会主动唤起 App，本版本已阻止自动跳转，不会再被甩出应用。")
+                    .font(.callout)
+                Text("视频嗅探不到怎么办").font(.headline)
+                Text("先点一次播放。绝大多数站点的地址在 play 事件之后才会出现，嗅探脚本会在那一刻上报。")
+                    .font(.callout)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(20)
+        }
+        .navigationTitle("帮助")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
