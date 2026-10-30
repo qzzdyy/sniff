@@ -24,6 +24,8 @@ struct ToolboxView: View {
     @State private var toast: String?
     @State private var choiceDialog = false
     @State private var lastOutput: URL?
+    @State private var runPayload: ToolRunPayload?
+    @State private var page = 0
 
     // 音频裁剪
     @State private var showTrim = false
@@ -39,26 +41,23 @@ struct ToolboxView: View {
     private let bg = Color(red: 0.949, green: 0.949, blue: 0.965)
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 26) {
-                inspireCard
-                section("图片", [
-                    .imageConvert, .imageResize, .imageTargetSize, .livePhotoToVideo
-                ])
-                section("GIF / 动图", [
-                    .videoToGIF, .livePhotoToGIF, .gifToMP4, .gifFrames
-                ])
-                section("视频", [
-                    .videoToMP4, .videoCompress, .videoCompressSize, .videoGrabFrame, .videoExtractAudio
-                ])
-                section("音频", [
-                    .audioConvert, .audioTrim, .audioMerge
-                ])
-                section("PDF", [.toPDF])
-                section("解压 / 压缩", [.unzip, .zip])
+        VStack(spacing: 0) {
+            inspireCard
+                .padding(.horizontal, 18)
+                .padding(.top, 6)
+                .padding(.bottom, 4)
+
+            // 原版 VC_Main：UICollectionView 横向分页 + pageControl
+            TabView(selection: $page) {
+                pageView("图片", [.imageConvert, .imageResize, .imageTargetSize, .livePhotoToVideo]).tag(0)
+                pageView("GIF / 动图", [.videoToGIF, .livePhotoToGIF, .gifToMP4, .gifFrames]).tag(1)
+                pageView("视频", [.videoToMP4, .videoCompress, .videoCompressSize, .videoGrabFrame, .videoExtractAudio]).tag(2)
+                pageView("音频与文件", [.audioConvert, .audioTrim, .audioMerge, .toPDF, .unzip, .zip]).tag(3)
             }
-            .padding(.horizontal, 18)
-            .padding(.bottom, 34)
+            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+
+            pageDots
+                .padding(.bottom, 8)
         }
         .background(bg)
         .navigationBarTitleDisplayMode(.inline)
@@ -90,17 +89,17 @@ struct ToolboxView: View {
             }
         }
         .sheet(isPresented: $showTrim) { trimSheet }
+        .fullScreenCover(item: $runPayload) { payload in
+            ToolRunView(tool: payload.tool, inputs: payload.urls)
+        }
         .fileImporter(isPresented: $showPicker,
                       allowedContentTypes: pendingTool?.allowedTypes ?? [.item],
                       allowsMultipleSelection: pendingTool?.multiple ?? false) { result in
             switch result {
             case .success(let urls):
                 guard let tool = pendingTool, !urls.isEmpty else { return }
-                if tool.needsTrim, let first = urls.first {
-                    prepareTrim(first)
-                } else {
-                    start(urls)
-                }
+                pendingTool = nil
+                runPayload = ToolRunPayload(tool: tool, urls: urls)
             case .failure:
                 showToast("没有取到文件")
                 pendingTool = nil
@@ -146,6 +145,31 @@ struct ToolboxView: View {
             .buttonStyle(.plain)
         }
         .padding(.top, 6)
+    }
+
+    // MARK: - 分页
+
+    private func pageView(_ title: String, _ items: [ToolAction]) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                section(title, items)
+                    .padding(.top, 12)
+            }
+            .padding(.horizontal, 18)
+            .padding(.bottom, 26)
+        }
+    }
+
+    private var pageDots: some View {
+        HStack(spacing: 6) {
+            ForEach(0..<4, id: \.self) { index in
+                Capsule()
+                    .fill(index == page ? Color(white: 0.25) : Color(white: 0.82))
+                    .frame(width: index == page ? 16 : 6, height: 6)
+                    .animation(.easeInOut(duration: 0.2), value: page)
+            }
+        }
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - 分组
@@ -489,24 +513,45 @@ extension MediaConverter {
         case .videoToMP4:
             videoToMP4(first, completion: completion)
         case .videoCompress:
-            videoCompress(first, completion: completion)
+            let parts = choice.split(separator: "|").map(String.init)
+            let height = parts.first.flatMap { Int($0) } ?? 720
+            let mute = parts.count > 1 && parts[1] == "mute"
+            videoCompress(first, height: height, removeAudio: mute, completion: completion)
         case .videoCompressSize:
-            let mb = Double(choice.replacingOccurrences(of: " MB", with: "")) ?? 50
+            let parts = choice.split(separator: "|").map(String.init)
+            let mb = Double((parts.first ?? "50").replacingOccurrences(of: " MB", with: "")) ?? 50
             videoCompress(toSizeMB: mb, input: first, completion: completion)
         case .videoGrabFrame:
-            grabFrame(first, completion: completion)
+            grabFrame(first, at: Double(choice) ?? 0, completion: completion)
         case .videoExtractAudio:
             extractAudio(first, completion: completion)
         case .videoToGIF:
-            videoToGIF(first, completion: completion)
+            let p = choice.split(separator: "|", omittingEmptySubsequences: false).map(String.init)
+            if p.isEmpty || choice.isEmpty {
+                videoToGIF(first, completion: completion)
+            } else {
+                let scale = Double(p[0]) ?? 1
+                let fps = p.count > 1 ? (Int(p[1]) ?? 10) : 10
+                var start: Double? = nil
+                var end: Double? = nil
+                if p.count > 2, !p[2].isEmpty, let v = Double(p[2]) { start = v }
+                if p.count > 3, !p[3].isEmpty, let v = Double(p[3]) { end = v }
+                let hq = p.count > 4 ? p[4] != "0" : true
+                videoToGIF(first, scale: scale, fps: fps, start: start, end: end,
+                           highQuality: hq, completion: completion)
+            }
         case .gifToMP4:
             gifToMP4(first, completion: completion)
         case .gifFrames:
             gifFrames(first, completion: completion)
         case .imageConvert:
-            imageConvert(first, to: choice.isEmpty ? "jpg" : choice, completion: completion)
+            let parts = choice.split(separator: "|").map(String.init)
+            let fmt = parts.first ?? "jpg"
+            let quality = parts.count > 1 ? (Double(parts[1]) ?? 0.9) : 0.9
+            imageConvert(first, to: fmt.isEmpty ? "jpg" : fmt,
+                         quality: CGFloat(quality), completion: completion)
         case .imageResize:
-            imageResize(first, maxPixel: 1600, completion: completion)
+            imageResize(first, maxPixel: CGFloat(Double(choice) ?? 1600), completion: completion)
         case .imageTargetSize:
             imageCompress(toBytes: parseSize(choice), input: first, completion: completion)
         case .audioConvert:

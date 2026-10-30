@@ -12,6 +12,7 @@ struct SettingsView: View {
     @AppStorage("floatWindow") private var floatWindow = false
 
     @State private var cacheText = "0 B"
+    @State private var showM3 = false
     @State private var toast: String?
 
     private var version: String {
@@ -46,8 +47,11 @@ struct SettingsView: View {
                     }
                     .tint(Color(red: 0.20, green: 0.78, blue: 0.35))
 
+                    Button { showM3 = true } label: {
+                        rowLabel("M3U8 任务管理", "list.bullet.indent")
+                    }
                     NavigationLink { MultiTaskSettings(downloadManager: downloadManager) } label: {
-                        rowLabel("任务管理", "list.bullet.indent")
+                        rowLabel("下载任务", "arrow.down.circle")
                     }
                     NavigationLink { MultiTaskAdvanced() } label: {
                         rowLabel("多任务设置", "square.stack.3d.down.right")
@@ -90,6 +94,7 @@ struct SettingsView: View {
                 }
             }
             .onAppear(perform: updateCacheText)
+            .sheet(isPresented: $showM3) { M3TaskManagerView() }
             .overlay(alignment: .bottom) {
                 if let toast {
                     Text(toast)

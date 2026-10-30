@@ -57,7 +57,7 @@ struct BrowserView: View {
         .background(Color.white)
         .ignoresSafeArea(.keyboard, edges: .bottom)
         .sheet(isPresented: $showResources, onDismiss: { resourceStore.resetBadge() }) {
-            ResourceListView(resourceStore: resourceStore, downloadManager: downloadManager)
+            SnapDetailView(resourceStore: resourceStore, downloadManager: downloadManager)
         }
         .sheet(isPresented: $showHistory) {
             BrowserHistorySheet(store: siteStore, onOpen: { url in

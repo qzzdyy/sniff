@@ -59,11 +59,13 @@ enum MediaConverter {
     }
 
     /// 压缩：限制高度，CRF 26，视频体积通常能降一半以上
-    static func videoCompress(_ input: URL, height: Int = 720, completion: @escaping (Result<URL, MediaError>) -> Void) {
+    static func videoCompress(_ input: URL, height: Int = 720, removeAudio: Bool = false,
+                              completion: @escaping (Result<URL, MediaError>) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             let out = outURL(for: input, suffix: "_压缩", ext: "mp4")
             try? FileManager.default.removeItem(at: out)
-            let ok = ffmpeg("-i \(q(input.path)) -vf \"scale=-2:\(height)\" -c:v libx264 -preset veryfast -crf 26 -c:a aac -b:a 128k -movflags +faststart \(q(out.path))")
+            let audio = removeAudio ? "-an" : "-c:a aac -b:a 128k"
+            let ok = ffmpeg("-i \(q(input.path)) -vf \"scale=-2:\(height)\" -c:v libx264 -preset veryfast -crf 26 \(audio) -movflags +faststart \(q(out.path))")
             ok && exists(out) ? done(out, completion) : fail(completion)
         }
     }
@@ -93,13 +95,33 @@ enum MediaConverter {
         }
     }
 
-    /// 视频转 GIF
-    static func videoToGIF(_ input: URL, completion: @escaping (Result<URL, MediaError>) -> Void) {
+    /// 视频转 GIF（可截取片段、调缩放与帧率、两遍调色板）
+    static func videoToGIF(_ input: URL, scale: Double = 1.0, fps: Int = 10,
+                           start: Double? = nil, end: Double? = nil, highQuality: Bool = true,
+                           completion: @escaping (Result<URL, MediaError>) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
             let out = outURL(for: input, suffix: "", ext: "gif")
             try? FileManager.default.removeItem(at: out)
-            let ok = ffmpeg("-i \(q(input.path)) -vf \"fps=10,scale=360:-1:flags=lanczos\" -loop 0 \(q(out.path))")
-            ok && exists(out) ? done(out, completion) : fail(completion)
+
+            var seek = ""
+            if let start, start > 0 { seek += "-ss \(String(format: "%.2f", start)) " }
+            if let start, let end, end > start {
+                seek += "-t \(String(format: "%.2f", end - start)) "
+            }
+            let width = max(80, Int(360 * max(0.2, min(1.0, scale))))
+            let filter = "fps=\(fps),scale=\(width):-1:flags=lanczos"
+
+            if highQuality {
+                let palette = out.deletingLastPathComponent()
+                    .appendingPathComponent("palette_\(UUID().uuidString).png")
+                let ok1 = ffmpeg("\(seek)-i \(q(input.path)) -vf \"\(filter),palettegen=stats_mode=diff\" \(q(palette.path))")
+                let ok2 = ok1 && ffmpeg("\(seek)-i \(q(input.path)) -i \(q(palette.path)) -lavfi \"\(filter)[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=4\" -loop 0 \(q(out.path))")
+                try? FileManager.default.removeItem(at: palette)
+                if ok2 && exists(out) { done(out, completion) } else { fail(completion) }
+            } else {
+                let ok = ffmpeg("\(seek)-i \(q(input.path)) -vf \"\(filter)\" -loop 0 \(q(out.path))")
+                ok && exists(out) ? done(out, completion) : fail(completion)
+            }
         }
     }
 
@@ -113,12 +135,14 @@ enum MediaConverter {
         }
     }
 
-    /// 从视频抽一帧当封面
-    static func grabFrame(_ input: URL, completion: @escaping (Result<URL, MediaError>) -> Void) {
+    /// 从视频抽一帧（可指定时间点）
+    static func grabFrame(_ input: URL, at time: Double = 0,
+                          completion: @escaping (Result<URL, MediaError>) -> Void) {
         DispatchQueue.global(qos: .userInitiated).async {
-            let out = outURL(for: input, suffix: "_封面", ext: "jpg")
+            let out = outURL(for: input, suffix: time > 0 ? "_\(Int(time))s" : "_封面", ext: "jpg")
             try? FileManager.default.removeItem(at: out)
-            let ok = ffmpeg("-i \(q(input.path)) -frames:v 1 -q:v 2 \(q(out.path))")
+            let seek = time > 0 ? "-ss \(String(format: "%.2f", time)) " : ""
+            let ok = ffmpeg("\(seek)-i \(q(input.path)) -frames:v 1 -q:v 2 \(q(out.path))")
             ok && exists(out) ? done(out, completion) : fail(completion)
         }
     }
