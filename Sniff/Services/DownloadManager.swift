@@ -18,6 +18,7 @@ struct DownloadTask: Identifiable, Equatable {
     var note: String?
 
     enum Status: Equatable {
+        case queued
         case running
         case paused
         case converting
@@ -26,6 +27,7 @@ struct DownloadTask: Identifiable, Equatable {
 
         var text: String {
             switch self {
+            case .queued:  return "排队中"
             case .running: return "下载中"
             case .paused:  return "已暂停"
             case .converting: return "正在转封装"
@@ -53,6 +55,11 @@ struct DownloadTask: Identifiable, Equatable {
         self.localURL = localURL
         self.resumeData = nil
         self.speed = 0
+    }
+
+    var isQueued: Bool {
+        if case .queued = status { return true }
+        return false
     }
 
     var isRunning: Bool {
@@ -84,6 +91,8 @@ final class DownloadManager: NSObject, ObservableObject, URLSessionDownloadDeleg
     private var hlsJobs: [UUID: HLSDownloader] = [:]
     private var retryCount: [UUID: Int] = [:]
     private var speedSample: [UUID: (bytes: Int64, time: Date)] = [:]
+    /// 等待中的任务（超过同时下载数时排队）
+    private var queue: [UUID] = []
     private let lock = NSLock()
 
     override init() {
@@ -98,8 +107,8 @@ final class DownloadManager: NSObject, ObservableObject, URLSessionDownloadDeleg
     // MARK: - 对外接口
 
     func download(_ item: ResourceItem) {
-        guard !tasks.contains(where: { $0.item == item && $0.isRunning }) else { return }
-        for old in tasks where old.item == item && !old.isRunning {
+        guard !tasks.contains(where: { $0.item == item && ($0.isRunning || $0.isQueued) }) else { return }
+        for old in tasks where old.item == item && !old.isRunning && !old.isQueued {
             remove(old)
         }
         let task = DownloadTask(item: item)
@@ -110,11 +119,50 @@ final class DownloadManager: NSObject, ObservableObject, URLSessionDownloadDeleg
 
         // 先把网页里的 Cookie 同步给下载会话，否则防盗链站点下到一半就 403
         copyWebCookies {
-            if item.kind == .hls {
-                self.startHLS(task)
-            } else {
-                self.startDirect(task)
+            DispatchQueue.main.async {
+                self.enqueue(task)
             }
+        }
+    }
+
+    // MARK: - 任务队列
+
+    /// 有空位就直接开始，否则排队
+    private func enqueue(_ task: DownloadTask) {
+        let active = tasks.filter { $0.isRunning }.count
+        if active < DownloadSettings.maxConcurrentTasks {
+            start(task)
+        } else {
+            lock.lock()
+            queue.append(task.id)
+            lock.unlock()
+            update(id: task.id) { $0.status = .queued }
+        }
+    }
+
+    private func start(_ task: DownloadTask) {
+        update(id: task.id) { $0.status = .running }
+        if task.item.kind == .hls {
+            startHLS(task)
+        } else {
+            startDirect(task)
+        }
+    }
+
+    /// 空出一个槽位后拉起下一个
+    private func pump() {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { self.pump() }
+            return
+        }
+        while true {
+            lock.lock()
+            let next = queue.isEmpty ? nil : queue.removeFirst()
+            lock.unlock()
+            guard let id = next else { return }
+            guard let task = tasks.first(where: { $0.id == id }), task.isQueued else { continue }
+            start(task)
+            return
         }
     }
 
@@ -205,6 +253,7 @@ final class DownloadManager: NSObject, ObservableObject, URLSessionDownloadDeleg
         DispatchQueue.main.async {
             self.tasks.removeAll { $0.id == task.id }
             self.persist(force: true)
+            self.pump()
         }
     }
 
@@ -495,6 +544,7 @@ final class DownloadManager: NSObject, ObservableObject, URLSessionDownloadDeleg
 
     private func statusKey(_ status: DownloadTask.Status) -> String {
         switch status {
+        case .queued:  return "queued"
         case .running: return "running"
         case .paused:  return "paused"
         case .converting: return "converting"
@@ -524,10 +574,15 @@ final class DownloadManager: NSObject, ObservableObject, URLSessionDownloadDeleg
     private func update(id: UUID, _ block: @escaping (inout DownloadTask) -> Void) {
         DispatchQueue.main.async {
             guard let idx = self.tasks.firstIndex(where: { $0.id == id }) else { return }
+            let wasActive = self.tasks[idx].isRunning
             var t = self.tasks[idx]
             block(&t)
             self.tasks[idx] = t
             self.persist()
+            // 任务结束或暂停后，把排队中的下一个拉起来
+            if wasActive && !t.isRunning {
+                self.pump()
+            }
         }
     }
 }
