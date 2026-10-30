@@ -253,8 +253,8 @@ struct ToolboxView: View {
             switch result {
             case .success(let url):
                 if let tool { start([url], override: tool) }
-            case .failure(let msg):
-                showToast("失败：\(msg)")
+            case .failure(let err):
+                showToast("失败：\(err.message)")
                 pendingTool = nil
             }
         }
@@ -547,11 +547,11 @@ extension MediaConverter {
 
 enum LivePhotoExtractor {
     /// 从 PHAsset 取出配对视频，落到临时目录
-    static func videoURL(from asset: PHAsset, completion: @escaping (Result<URL, String>) -> Void) {
+    static func videoURL(from asset: PHAsset, completion: @escaping (Result<URL, MediaError>) -> Void) {
         let resources = PHAssetResource.assetResources(for: asset)
         guard let paired = resources.first(where: { $0.type == .pairedVideo })
                 ?? resources.first(where: { $0.type == .fullSizeVideo }) else {
-            DispatchQueue.main.async { completion(.failure("这张照片没有视频轨")) }
+            DispatchQueue.main.async { completion(.failure(MediaError("这张照片没有视频轨"))) }
             return
         }
         let dest = FileManager.default.temporaryDirectory
@@ -561,7 +561,7 @@ enum LivePhotoExtractor {
         PHAssetResourceManager.default().writeData(for: paired, toFile: dest, options: options) { error in
             DispatchQueue.main.async {
                 if let error {
-                    completion(.failure(error.localizedDescription))
+                    completion(.failure(MediaError(error.localizedDescription)))
                 } else {
                     completion(.success(dest))
                 }
