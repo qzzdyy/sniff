@@ -64,33 +64,6 @@ struct SettingsView: View {
                     .tint(Color(red: 0.20, green: 0.78, blue: 0.35))
                 }
 
-                Section("反馈") {
-                    NavigationLink { SimpleTextPage(title: "评论", text: "还没有接入评论服务。\n\n想说什么可以直接在聊天里告诉开发者。") } label: {
-                        rowLabel("评论", "hand.thumbsup")
-                    }
-                    NavigationLink { HelpPage() } label: {
-                        rowLabel("帮助", "questionmark.circle")
-                    }
-                    NavigationLink { SimpleTextPage(title: "反馈", text: "遇到问题请附上：\n\n1. 打不开的网址\n2. 页面顶部出现的错误提示（如果有）\n3. iOS 版本和机型") } label: {
-                        rowLabel("反馈", "envelope")
-                    }
-                    NavigationLink { SimpleTextPage(title: "语言", text: "当前仅支持简体中文。") } label: {
-                        HStack {
-                            rowLabel("语言", "globe")
-                            Spacer()
-                            Text("简体中文")
-                                .font(.system(size: 16))
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    NavigationLink { SimpleTextPage(title: "Lab", text: "实验性功能会先放在这里。\n\n当前实验项：\n· 强制桌面 UA\n· 嗅探结果按域名归并") } label: {
-                        rowLabel("Lab", "flask")
-                    }
-                    NavigationLink { OpenSourcePage() } label: {
-                        rowLabel("开源", "circle")
-                    }
-                }
-
                 Section {
                 } footer: {
                     VStack(spacing: 6) {

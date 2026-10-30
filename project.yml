@@ -39,6 +39,7 @@ targets:
           NSAllowsArbitraryLoadsInWebContent: true
           NSAllowsLocalNetworking: true
         NSPhotoLibraryAddUsageDescription: 需要相册写入权限，用于保存嗅探到的图片和视频
+        NSPhotoLibraryUsageDescription: 需要读取相册，用于选择实况照片转换和图片压缩
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true
     dependencies:

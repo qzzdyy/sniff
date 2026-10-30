@@ -8,8 +8,7 @@ struct SiteListView: View {
     @ObservedObject var siteStore: SiteStore
 
     @State private var query = ""
-    @State private var pendingSite: SiteBookmark?
-    @State private var showBrowser = false
+    @State private var browserSite: SiteBookmark?
     @State private var showAdd = false
     @State private var draftTitle = ""
     @State private var draftURL = ""
@@ -42,18 +41,7 @@ struct SiteListView: View {
                 .foregroundColor(accent)
             }
         }
-        .navigationDestination(isPresented: $showBrowser) {
-            Group {
-                if let site = pendingSite {
-                    BrowserView(webViewStore: webViewStore,
-                                resourceStore: resourceStore,
-                                downloadManager: downloadManager,
-                                initialURL: site.urlString)
-                        .onAppear { siteStore.touch(site) }
-                }
-            }
-        }
-        .navigationDestination(for: SiteBookmark.self) { site in
+        .fullScreenCover(item: $browserSite) { site in
             BrowserView(webViewStore: webViewStore,
                         resourceStore: resourceStore,
                         downloadManager: downloadManager,
@@ -95,8 +83,7 @@ struct SiteListView: View {
         guard let normalized = SiteStore.normalize(query) else { return }
         let site = SiteBookmark(title: query, urlString: normalized)
         query = ""
-        pendingSite = site
-        showBrowser = true
+        browserSite = site
     }
 
     // MARK: - 最近访问
@@ -107,7 +94,7 @@ struct SiteListView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
                     ForEach(siteStore.recents) { site in
-                        NavigationLink(value: site) {
+                        Button { browserSite = site } label: {
                             HStack(spacing: 9) {
                                 ZStack {
                                     RoundedRectangle(cornerRadius: 8, style: .continuous)
@@ -151,7 +138,7 @@ struct SiteListView: View {
             sectionTitle("我的站点")
             LazyVGrid(columns: columns, spacing: 18) {
                 ForEach(siteStore.sites) { site in
-                    NavigationLink(value: site) {
+                    Button { browserSite = site } label: {
                         VStack(spacing: 8) {
                             ZStack {
                                 RoundedRectangle(cornerRadius: 15, style: .continuous)

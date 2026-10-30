@@ -1,6 +1,7 @@
 import Foundation
 import UIKit
 import AVFoundation
+import ImageIO
 
 /// 转换失败原因（Result 的 Failure 必须符合 Error）
 struct MediaError: Error {
@@ -178,6 +179,172 @@ enum MediaConverter {
             do { try payload.write(to: out); done(out, completion) }
             catch { fail(completion, error.localizedDescription) }
         }
+    }
+
+    // MARK: - PDF
+
+    /// 多张图片合成一个 PDF（A4 等比居中）
+    static func imagesToPDF(_ inputs: [URL], completion: @escaping (Result<URL, MediaError>) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            guard !inputs.isEmpty else { return fail(completion, "没有选中图片") }
+            let page = CGRect(x: 0, y: 0, width: 595, height: 842)
+            let out = outputDir().appendingPathComponent("合并_\(Int(Date().timeIntervalSince1970)).pdf")
+            let renderer = UIGraphicsPDFRenderer(bounds: page)
+            do {
+                try renderer.writePDF(to: out) { ctx in
+                    for url in inputs {
+                        guard let data = try? Data(contentsOf: url),
+                              let img = UIImage(data: data) else { continue }
+                        let scale = min(page.width / img.size.width, page.height / img.size.height)
+                        let size = CGSize(width: img.size.width * scale, height: img.size.height * scale)
+                        let rect = CGRect(x: (page.width - size.width) / 2,
+                                          y: (page.height - size.height) / 2,
+                                          width: size.width, height: size.height)
+                        ctx.beginPage()
+                        img.draw(in: rect)
+                    }
+                }
+                exists(out) ? done(out, completion) : fail(completion, "PDF 写入失败")
+            } catch {
+                fail(completion, error.localizedDescription)
+            }
+        }
+    }
+
+    /// 图片压到指定字节以内：先降质量，再缩尺寸
+    static func imageCompress(toBytes limit: Int, input: URL,
+                              completion: @escaping (Result<URL, MediaError>) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            guard let data = try? Data(contentsOf: input),
+                  var img = UIImage(data: data) else { return fail(completion, "无法读取图片") }
+
+            var best = img.jpegData(compressionQuality: 0.9)
+            for q in stride(from: 0.85, through: 0.2, by: -0.1) {
+                if let d = img.jpegData(compressionQuality: CGFloat(q)), d.count <= limit {
+                    best = d
+                    break
+                }
+                if let d = img.jpegData(compressionQuality: CGFloat(q)) { best = d }
+            }
+            if let d = best, d.count <= limit {
+                let out = outURL(for: input, suffix: "_压缩", ext: "jpg")
+                try? d.write(to: out)
+                return done(out, completion)
+            }
+
+            // 还不够小，按面积比例缩
+            var scale: CGFloat = 0.8
+            while scale > 0.15 {
+                let target = CGSize(width: img.size.width * scale, height: img.size.height * scale)
+                let renderer = UIGraphicsImageRenderer(size: target)
+                img = renderer.image { _ in img.draw(in: CGRect(origin: .zero, size: target)) }
+                if let d = img.jpegData(compressionQuality: 0.8), d.count <= limit {
+                    let out = outURL(for: input, suffix: "_压缩", ext: "jpg")
+                    try? d.write(to: out)
+                    return done(out, completion)
+                }
+                scale -= 0.1
+            }
+            fail(completion, "压不到目标大小，换更大的目标试试")
+        }
+    }
+
+    /// GIF 拆帧：每帧存成 png
+    static func gifFrames(_ input: URL, completion: @escaping (Result<URL, MediaError>) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            guard let src = CGImageSourceCreateWithURL(input as CFURL, nil) else {
+                return fail(completion, "无法读取 GIF")
+            }
+            let count = CGImageSourceGetCount(src)
+            guard count > 0 else { return fail(completion, "GIF 里没有帧") }
+
+            let name = input.deletingPathExtension().lastPathComponent
+            let dir = outputDir().appendingPathComponent("\(name)_帧", isDirectory: true)
+            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+
+            var saved = 0
+            for i in 0..<count {
+                guard let cg = CGImageSourceCreateImageAtIndex(src, i, nil) else { continue }
+                let url = dir.appendingPathComponent(String(format: "帧_%03d.png", i + 1))
+                if let dest = CGImageDestinationCreateWithURL(url as CFURL, "public.png" as CFString, 1, nil) {
+                    CGImageDestinationAddImage(dest, cg, nil)
+                    if CGImageDestinationFinalize(dest) { saved += 1 }
+                }
+            }
+            saved > 0 ? done(dir, completion) : fail(completion, "没有提取到任何帧")
+        }
+    }
+
+    // MARK: - 音频
+
+    /// 多个音频按顺序连接
+    static func audioConcat(_ inputs: [URL], completion: @escaping (Result<URL, MediaError>) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            guard inputs.count >= 2 else { return fail(completion, "至少选两个文件") }
+            let list = outputDir().appendingPathComponent("concat_\(Int(Date().timeIntervalSince1970)).txt")
+            let body = inputs.map { "file '\($0.path.replacingOccurrences(of: "'", with: "'\\''"))'" }
+                .joined(separator: "\n")
+            do { try body.write(to: list, atomically: true, encoding: .utf8) }
+            catch { return fail(completion, error.localizedDescription) }
+
+            let out = outputDir().appendingPathComponent("连接_\(Int(Date().timeIntervalSince1970)).m4a")
+            try? FileManager.default.removeItem(at: out)
+            let ok = ffmpeg("-f concat -safe 0 -i \(q(list.path)) -c:a aac -b:a 192k \(q(out.path))")
+            try? FileManager.default.removeItem(at: list)
+            ok && exists(out) ? done(out, completion) : fail(completion)
+        }
+    }
+
+    /// 裁剪音频片段
+    static func audioTrim(_ input: URL, start: Double, end: Double,
+                          completion: @escaping (Result<URL, MediaError>) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            guard end > start else { return fail(completion, "结束时间要大于开始时间") }
+            let ext = input.pathExtension.isEmpty ? "m4a" : input.pathExtension
+            let out = outURL(for: input, suffix: "_裁剪", ext: ext)
+            try? FileManager.default.removeItem(at: out)
+            let ok = ffmpeg("-ss \(String(format: "%.2f", start)) -to \(String(format: "%.2f", end)) -i \(q(input.path)) -c:a aac -b:a 192k \(q(out.path))")
+            ok && exists(out) ? done(out, completion) : fail(completion)
+        }
+    }
+
+    // MARK: - 压缩包
+
+    static func zipFiles(_ inputs: [URL], completion: @escaping (Result<URL, MediaError>) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            let out = outputDir().appendingPathComponent("归档_\(Int(Date().timeIntervalSince1970)).zip")
+            do {
+                try ZipArchive.zip(inputs, to: out)
+                done(out, completion)
+            } catch {
+                fail(completion, error.localizedDescription)
+            }
+        }
+    }
+
+    static func unzipFile(_ input: URL, completion: @escaping (Result<URL, MediaError>) -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            let name = input.deletingPathExtension().lastPathComponent
+            let dir = outputDir().appendingPathComponent(name, isDirectory: true)
+            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+            do {
+                try ZipArchive.unzip(input, to: dir)
+                done(dir, completion)
+            } catch {
+                fail(completion, error.localizedDescription)
+            }
+        }
+    }
+
+    // MARK: - 实况照片
+
+    /// 实况照片的第一段视频 -> MP4
+    static func livePhotoToVideo(_ videoURL: URL, completion: @escaping (Result<URL, MediaError>) -> Void) {
+        videoToMP4(videoURL, completion: completion)
+    }
+
+    static func livePhotoToGIF(_ videoURL: URL, completion: @escaping (Result<URL, MediaError>) -> Void) {
+        videoToGIF(videoURL, completion: completion)
     }
 
     // MARK: - 工具
