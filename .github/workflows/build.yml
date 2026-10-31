@@ -40,6 +40,7 @@ jobs:
 
       - name: 构建并打包未签名 IPA
         run: |
+          rm -rf dd Payload Sniff.ipa
           set +e
           xcodebuild build -project Sniff.xcodeproj -scheme Sniff -configuration Release \
             -derivedDataPath dd -destination 'generic/platform=iOS' \
@@ -69,6 +70,8 @@ jobs:
           grep -n "线程配置" Sniff/Views/SettingsView.swift | head -3 || echo "源码无此串"
           echo "---- 产物校验 ----"
           strings -a Payload/Sniff.app/Sniff | grep -c "线程配置" || echo 0
+          echo "编译文件数: $(grep -c "CompileSwift.sources" build.log || true)"
+          echo "设置页编译记录: $(grep -c "SettingsView.swift" build.log || true)"
 
       - uses: actions/upload-artifact@v4
         with:
