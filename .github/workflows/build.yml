@@ -70,8 +70,15 @@ jobs:
           grep -n "线程配置" Sniff/Views/SettingsView.swift | head -3 || echo "源码无此串"
           echo "---- 产物校验 ----"
           strings -a Payload/Sniff.app/Sniff | grep -c "线程配置" || echo 0
-          echo "编译文件数: $(grep -c "CompileSwift.sources" build.log || true)"
-          echo "设置页编译记录: $(grep -c "SettingsView.swift" build.log || true)"
+          echo "---- 编译记录 ----"
+          grep "SettingsView" build.log | head -5 || true
+          OBJ=$(find dd -name "SettingsView.o" | head -1)
+          echo "OBJ=$OBJ"
+          if [ -n "$OBJ" ]; then
+            echo "对象文件命中: $(grep -a -c "线程配置" "$OBJ" || true)"
+            ls -l "$OBJ"
+          fi
+          echo "源码 mtime: $(ls -l Sniff/Views/SettingsView.swift | awk '{print $6,$7,$8}')"
 
       - uses: actions/upload-artifact@v4
         with:
