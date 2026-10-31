@@ -75,21 +75,6 @@ struct ContentView: View {
         }
     }
 
-            if floatWindow, let active = m3Store.currentActive {
-                floatingBall(active)
-            }
-        }
-        .sheet(isPresented: $showM3Manager) {
-            M3TaskManagerView()
-        }
-        .fullScreenCover(isPresented: $showTips) {
-            TipsView { hasSeenTips = true; showTips = false }
-        }
-        .onAppear {
-            if !hasSeenTips { showTips = true }
-        }
-    }
-
     /// 悬浮球（原版 buttonShowM3UIMgr 的浮窗）
     private func floatingBall(_ task: M3Task) -> some View {
         VStack(spacing: 2) {
