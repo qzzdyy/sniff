@@ -105,7 +105,7 @@ struct WebTaskPreviewView: View {
                     .lineLimit(1)
                 Text(item.metaText ?? item.url.host ?? "")
                     .font(.system(size: 11))
-                    .foregroundColor(bgMode == 2 ? Color(white: 0.45) : Color.white.opacity(0.6))
+                    .foregroundColor(bgMode == 2 ? Theme.secondary : Color.white.opacity(0.6))
                     .lineLimit(1)
             }
             Spacer()
@@ -549,7 +549,7 @@ struct CheckerBoard: View {
                     let rect = CGRect(x: CGFloat(col) * cell, y: CGFloat(row) * cell,
                                       width: cell, height: cell)
                     let isDark = (row + col) % 2 == 0
-                    context.fill(Path(rect), with: .color(isDark ? Color(white: 0.32) : Color(white: 0.24)))
+                    context.fill(Path(rect), with: .color(isDark ? Theme.secondary : Theme.label))
                 }
             }
         }

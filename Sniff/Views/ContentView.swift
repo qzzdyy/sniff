@@ -80,7 +80,7 @@ struct ContentView: View {
         VStack(spacing: 2) {
             ZStack {
                 Circle()
-                    .stroke(Color(white: 0.88), lineWidth: 3)
+                    .stroke(Theme.separator, lineWidth: 3)
                     .frame(width: 42, height: 42)
                 Circle()
                     .trim(from: 0, to: max(0.03, task.progress))
@@ -93,7 +93,7 @@ struct ContentView: View {
             }
             Text(L10n.t("ins.snap.m3u_unit"))
                 .font(.system(size: 9, weight: .medium))
-                .foregroundColor(Color(white: 0.4))
+                .foregroundColor(Theme.secondary)
         }
         .padding(8)
         .background(Circle().fill(.regularMaterial))

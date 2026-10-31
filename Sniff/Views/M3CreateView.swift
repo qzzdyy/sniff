@@ -86,7 +86,7 @@ struct M3CreateView: View {
             ProgressView()
             Text("正在解析播放列表...")
                 .font(.system(size: 13))
-                .foregroundColor(Color(white: 0.5))
+                .foregroundColor(Theme.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -95,13 +95,13 @@ struct M3CreateView: View {
         VStack(spacing: 10) {
             Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 34))
-                .foregroundColor(Color(white: 0.6))
+                .foregroundColor(Theme.secondary)
             Text(L10n.t("m3.create.parse_failed"))
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(accent)
             Text(text)
                 .font(.system(size: 12))
-                .foregroundColor(Color(white: 0.5))
+                .foregroundColor(Theme.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
             Button {
@@ -127,7 +127,7 @@ struct M3CreateView: View {
                 HStack(spacing: 8) {
                     Text(L10n.t("m3.create.name"))
                         .font(.system(size: 14))
-                        .foregroundColor(Color(white: 0.45))
+                        .foregroundColor(Theme.secondary)
                     TextField("未命名", text: $taskName)
                         .font(.system(size: 14))
                         .textInputAutocapitalization(.never)
@@ -172,7 +172,7 @@ struct M3CreateView: View {
                     Text("画面流决定清晰度；音频和字幕可单独选择或不选。下载完成后自动合并为 MP4。")
                         .font(.system(size: 11))
                 }
-                .foregroundColor(Color(white: 0.55))
+                .foregroundColor(Theme.secondary)
             }
         }
         .listStyle(.insetGrouped)
@@ -183,7 +183,7 @@ struct M3CreateView: View {
             HStack(spacing: 12) {
                 Image(systemName: s.kind.symbol)
                     .font(.system(size: 15))
-                    .foregroundColor(selected ? accent : Color(white: 0.6))
+                    .foregroundColor(selected ? accent : Theme.secondary)
                     .frame(width: 22)
 
                 VStack(alignment: .leading, spacing: 3) {
@@ -202,14 +202,14 @@ struct M3CreateView: View {
                         }
                     }
                     .font(.system(size: 11))
-                    .foregroundColor(Color(white: 0.55))
+                    .foregroundColor(Theme.secondary)
                 }
 
                 Spacer()
 
                 Image(systemName: selected ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 19))
-                    .foregroundColor(selected ? accent : Color(white: 0.82))
+                    .foregroundColor(selected ? accent : Theme.tertiary)
             }
             .padding(.vertical, 2)
         }
@@ -234,7 +234,7 @@ struct M3CreateView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
         }
-        .background(Color(white: 0.98))
+        .background(Color(uiColor: .secondarySystemGroupedBackground))
     }
 
     // MARK: - 动作

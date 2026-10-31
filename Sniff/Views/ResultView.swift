@@ -46,12 +46,12 @@ struct ResultView: View {
                                                 .lineLimit(1)
                                             Text(sizeText(url))
                                                 .font(.system(size: 11))
-                                                .foregroundColor(Color(white: 0.5))
+                                                .foregroundColor(Theme.secondary)
                                         }
                                         Spacer()
                                         Image(systemName: "chevron.right")
                                             .font(.system(size: 11, weight: .semibold))
-                                            .foregroundColor(Color(white: 0.75))
+                                            .foregroundColor(Theme.tertiary)
                                     }
                                     .padding(.vertical, 11)
                                     .padding(.horizontal, 14)
@@ -62,7 +62,7 @@ struct ResultView: View {
                                 }
                             }
                         }
-                        .background(RoundedRectangle(cornerRadius: 14).fill(Color.white))
+                        .background(RoundedRectangle(cornerRadius: 10).fill(Theme.card))
                     }
 
                     if !files.isEmpty { actions }
@@ -121,7 +121,7 @@ struct ResultView: View {
             if !files.isEmpty {
                 Text("共 \(files.count) 个文件 · \(totalSize)")
                     .font(.system(size: 12))
-                    .foregroundColor(Color(white: 0.5))
+                    .foregroundColor(Theme.secondary)
             }
         }
         .padding(.top, 8)
@@ -141,7 +141,7 @@ struct ResultView: View {
                 actionCard("分享", "square.and.arrow.up", Color(red: 0.55, green: 0.35, blue: 0.82)) {
                     exporting = files
                 }
-                actionCard("文件夹", "folder.badge.gearshape", Color(white: 0.35)) {
+                actionCard("文件夹", "folder.badge.gearshape", Theme.secondary) {
                     revealInFiles()
                 }
             }
@@ -161,7 +161,7 @@ struct ResultView: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(RoundedRectangle(cornerRadius: 14).fill(Color.white))
+            .background(RoundedRectangle(cornerRadius: 10).fill(Theme.card))
         }
         .buttonStyle(.plain)
     }
@@ -169,10 +169,10 @@ struct ResultView: View {
     private var messageBox: some View {
         Text(message)
             .font(.system(size: 12))
-            .foregroundColor(Color(white: 0.45))
+            .foregroundColor(Theme.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(12)
-            .background(RoundedRectangle(cornerRadius: 12).fill(Color.white))
+            .background(RoundedRectangle(cornerRadius: 10).fill(Theme.card))
     }
 
     // MARK: - 动作

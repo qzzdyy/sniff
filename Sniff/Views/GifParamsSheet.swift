@@ -49,7 +49,7 @@ struct GifParamsSheet: View {
                             Spacer()
                             Text("\(Int(draft.scale * 100))%")
                                 .font(.system(size: 13, weight: .medium, design: .monospaced))
-                                .foregroundColor(Color(white: 0.45))
+                                .foregroundColor(Theme.secondary)
                         }
                         Slider(value: $draft.scale, in: 0.25...1.0, step: 0.05)
                             .tint(accent)
@@ -64,14 +64,14 @@ struct GifParamsSheet: View {
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 7)
                                         .background(RoundedRectangle(cornerRadius: 7)
-                                            .fill(draft.scale == value ? accent : Color(white: 0.95)))
+                                            .fill(draft.scale == value ? accent : Color(uiColor: .tertiarySystemFill)))
                                 }
                                 .buttonStyle(.plain)
                             }
                         }
                         Text(outPixelText)
                             .font(.system(size: 11))
-                            .foregroundColor(Color(white: 0.5))
+                            .foregroundColor(Theme.secondary)
                     }
 
                     // sliderFPS + buttonFPS + labelFPSHint
@@ -81,7 +81,7 @@ struct GifParamsSheet: View {
                             Spacer()
                             Text("\(draft.fps) fps")
                                 .font(.system(size: 13, weight: .medium, design: .monospaced))
-                                .foregroundColor(Color(white: 0.45))
+                                .foregroundColor(Theme.secondary)
                         }
                         Slider(value: Binding(get: { Double(draft.fps) },
                                               set: { draft.fps = Int($0.rounded()) }),
@@ -98,14 +98,14 @@ struct GifParamsSheet: View {
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 7)
                                         .background(RoundedRectangle(cornerRadius: 7)
-                                            .fill(draft.fps == value ? accent : Color(white: 0.95)))
+                                            .fill(draft.fps == value ? accent : Color(uiColor: .tertiarySystemFill)))
                                 }
                                 .buttonStyle(.plain)
                             }
                         }
                         Text("帧率越高越流畅，文件也越大")
                             .font(.system(size: 11))
-                            .foregroundColor(Color(white: 0.5))
+                            .foregroundColor(Theme.secondary)
                     }
 
                     // stackEstimate / labelEstimate / buttonEstimateLock
@@ -116,7 +116,7 @@ struct GifParamsSheet: View {
                             Spacer()
                             Text(estimateText)
                                 .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(overLimit ? Color(red: 0.82, green: 0.24, blue: 0.2) : Color(white: 0.45))
+                                .foregroundColor(overLimit ? Color(red: 0.82, green: 0.24, blue: 0.2) : Theme.secondary)
                             Button {
                                 draft.estimateLocked.toggle()
                             } label: {
@@ -138,7 +138,7 @@ struct GifParamsSheet: View {
                         }
                     }
                     .padding(12)
-                    .background(RoundedRectangle(cornerRadius: 12).fill(Color(white: 0.96)))
+                    .background(RoundedRectangle(cornerRadius: 12).fill(Color(uiColor: .secondarySystemGroupedBackground)))
                 }
                 .padding(18)
             }

@@ -107,7 +107,7 @@ struct DownloadsView: View {
             Spacer()
             Text("这个分类下还没有任务")
                 .font(.system(size: 14))
-                .foregroundColor(Color(white: 0.55))
+                .foregroundColor(Theme.secondary)
             Spacer()
         }
     }
@@ -154,7 +154,7 @@ struct DownloadsView: View {
             HStack(spacing: 12) {
                 Image(systemName: selected.contains(task.id) ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 21))
-                    .foregroundColor(selected.contains(task.id) ? accent : Color(white: 0.78))
+                    .foregroundColor(selected.contains(task.id) ? accent : Theme.tertiary)
 
                 icon(task)
                 VStack(alignment: .leading, spacing: 3) {
@@ -171,7 +171,7 @@ struct DownloadsView: View {
             .padding(12)
             .background(selected.contains(task.id)
                         ? Color(red: 0.92, green: 0.94, blue: 0.98)
-                        : Color(white: 0.985))
+                        : Color(uiColor: .secondarySystemGroupedBackground))
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .contentShape(Rectangle())
             .onTapGesture { toggleSelect(task.id) }
@@ -195,7 +195,7 @@ struct DownloadsView: View {
                 if let note = task.note, !task.isRunning {
                     Text(note)
                         .font(.system(size: 9))
-                        .foregroundColor(Color(white: 0.55))
+                        .foregroundColor(Theme.secondary)
                         .lineLimit(3)
                         .textSelection(.enabled)
                 }
@@ -241,7 +241,7 @@ struct DownloadsView: View {
                 }
             }
             .padding(12)
-            .background(Color(white: 0.985))
+            .background(Color(uiColor: .secondarySystemGroupedBackground))
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
     }
@@ -263,7 +263,7 @@ struct DownloadsView: View {
         case .queued:
             Image(systemName: "clock")
                 .font(.system(size: 20))
-                .foregroundColor(Color(white: 0.55))
+                .foregroundColor(Theme.secondary)
         case .running:
             Button {
                 downloadManager.pause(task)
@@ -327,7 +327,7 @@ struct DownloadsView: View {
     private func statusColor(_ task: DownloadTask) -> Color {
         if case .failed = task.status { return .red }
         if task.isPaused { return .orange }
-        return Color(white: 0.5)
+        return Theme.secondary
     }
 
     private func label(_ text: String, symbol: String) -> some View {
@@ -390,7 +390,7 @@ struct DownloadsView: View {
             Image(systemName: symbol).font(.system(size: 13, weight: .semibold))
             Text(title).font(.system(size: 14, weight: .medium))
         }
-        .foregroundColor(selected.isEmpty ? Color(white: 0.75) : tint)
+        .foregroundColor(selected.isEmpty ? Theme.tertiary : tint)
         .frame(maxWidth: .infinity)
     }
 
@@ -431,13 +431,13 @@ struct DownloadsView: View {
             Spacer()
             Image(systemName: "arrow.down.circle")
                 .font(.system(size: 40, weight: .light))
-                .foregroundColor(Color(white: 0.75))
+                .foregroundColor(Theme.tertiary)
             Text("还没有下载任务")
                 .font(.system(size: 16, weight: .medium))
-                .foregroundColor(Color(white: 0.35))
+                .foregroundColor(Theme.secondary)
             Text("在浏览页点右上角嗅探按钮，\n选一个资源点「下载」")
                 .font(.system(size: 13))
-                .foregroundColor(Color(white: 0.55))
+                .foregroundColor(Theme.secondary)
                 .multilineTextAlignment(.center)
             Spacer()
         }

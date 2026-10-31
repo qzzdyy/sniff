@@ -31,7 +31,7 @@ struct VideoTrimPicker: View {
                 // thumbStackView
                 HStack(spacing: 0) {
                     if thumbs.isEmpty {
-                        Rectangle().fill(Color(white: 0.92))
+                        Rectangle().fill(Color(uiColor: .tertiarySystemFill))
                     } else {
                         ForEach(Array(thumbs.enumerated()), id: \.offset) { _, img in
                             Image(uiImage: img)
@@ -104,7 +104,7 @@ struct VideoTrimPicker: View {
                 Text(timeText(end))
             }
             .font(.system(size: 11, design: .monospaced))
-            .foregroundColor(Color(white: 0.45))
+            .foregroundColor(Theme.secondary)
             .offset(y: 20)
         }
         .padding(.bottom, 22)
@@ -250,7 +250,7 @@ struct AudioTrimView: View {
                 )
             }
             .frame(height: 96)
-            .background(RoundedRectangle(cornerRadius: 10).fill(Color(white: 0.96)))
+            .background(RoundedRectangle(cornerRadius: 10).fill(Color(uiColor: .secondarySystemGroupedBackground)))
 
             HStack {
                 Text(timeText(start))
@@ -261,7 +261,7 @@ struct AudioTrimView: View {
                 Text(timeText(end))
             }
             .font(.system(size: 11, design: .monospaced))
-            .foregroundColor(Color(white: 0.45))
+            .foregroundColor(Theme.secondary)
 
             HStack(spacing: 24) {
                 Button {
@@ -280,7 +280,7 @@ struct AudioTrimView: View {
                 } label: {
                     Image(systemName: "gobackward.5")
                         .font(.system(size: 20))
-                        .foregroundColor(Color(white: 0.4))
+                        .foregroundColor(Theme.secondary)
                 }
                 .buttonStyle(.plain)
 
@@ -289,7 +289,7 @@ struct AudioTrimView: View {
                 } label: {
                     Image(systemName: "goforward.5")
                         .font(.system(size: 20))
-                        .foregroundColor(Color(white: 0.4))
+                        .foregroundColor(Theme.secondary)
                 }
                 .buttonStyle(.plain)
             }

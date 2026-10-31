@@ -108,10 +108,10 @@ struct ToolRunView: View {
             ForEach(Array(allInputs.enumerated()), id: \.offset) { index, url in
                 HStack(spacing: 12) {
                     ZStack {
-                        RoundedRectangle(cornerRadius: 9).fill(Color(white: 0.95))
+                        RoundedRectangle(cornerRadius: 9).fill(Color(uiColor: .tertiarySystemFill))
                         Image(systemName: symbol(for: url))
                             .font(.system(size: 18, weight: .light))
-                            .foregroundColor(Color(white: 0.4))
+                            .foregroundColor(Theme.secondary)
                     }
                     .frame(width: 44, height: 44)
 
@@ -122,7 +122,7 @@ struct ToolRunView: View {
                             .lineLimit(1)
                         Text(sizeText(url))
                             .font(.system(size: 11))
-                            .foregroundColor(Color(white: 0.5))
+                            .foregroundColor(Theme.secondary)
                     }
                     Spacer()
                     if allInputs.count > 1 {
@@ -131,7 +131,7 @@ struct ToolRunView: View {
                             extraInputs.remove(at: index - inputs.count)
                         } label: {
                             Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(Color(white: 0.8))
+                                .foregroundColor(Theme.separator)
                         }
                         .buttonStyle(.plain)
                     }
@@ -159,7 +159,7 @@ struct ToolRunView: View {
                 .buttonStyle(.plain)
             }
         }
-        .background(RoundedRectangle(cornerRadius: 14).fill(Color.white))
+        .background(RoundedRectangle(cornerRadius: 10).fill(Theme.card))
     }
 
     // MARK: - 时间轴
@@ -168,7 +168,7 @@ struct ToolRunView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(tool == .videoToGIF ? "截取片段" : "选择时间点")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(Color(white: 0.45))
+                .foregroundColor(Theme.secondary)
 
             if let first = inputs.first, mediaDuration > 0 {
                 if tool == .videoToGIF {
@@ -185,7 +185,7 @@ struct ToolRunView: View {
                             .tint(accent)
                         Text(String(format: "%.1fs", grabTime))
                             .font(.system(size: 11, design: .monospaced))
-                            .foregroundColor(Color(white: 0.45))
+                            .foregroundColor(Theme.secondary)
                     }
                 }
             } else {
@@ -193,14 +193,14 @@ struct ToolRunView: View {
             }
         }
         .padding(14)
-        .background(RoundedRectangle(cornerRadius: 14).fill(Color.white))
+        .background(RoundedRectangle(cornerRadius: 10).fill(Theme.card))
     }
 
     private var audioTrimPanel: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("选择保留区间")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(Color(white: 0.45))
+                .foregroundColor(Theme.secondary)
             if let first = inputs.first, mediaDuration > 0 {
                 AudioTrimView(url: first, duration: mediaDuration, start: $trimStart, end: $trimEnd)
             } else {
@@ -208,7 +208,7 @@ struct ToolRunView: View {
             }
         }
         .padding(14)
-        .background(RoundedRectangle(cornerRadius: 14).fill(Color.white))
+        .background(RoundedRectangle(cornerRadius: 10).fill(Theme.card))
     }
 
     // MARK: - 参数面板（stackPanel）
@@ -257,10 +257,10 @@ struct ToolRunView: View {
                         Spacer()
                         Text(gif.displayText)
                             .font(.system(size: 12))
-                            .foregroundColor(Color(white: 0.45))
+                            .foregroundColor(Theme.secondary)
                         Image(systemName: "chevron.right")
                             .font(.system(size: 11, weight: .semibold))
-                            .foregroundColor(Color(white: 0.7))
+                            .foregroundColor(Theme.separator)
                     }
                     .padding(.vertical, 6)
                 }
@@ -279,12 +279,12 @@ struct ToolRunView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(Color(white: 0.45))
+                .foregroundColor(Theme.secondary)
             content()
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 14).fill(Color.white))
+        .background(RoundedRectangle(cornerRadius: 10).fill(Theme.card))
     }
 
     private func segmentRow(_ options: [String], selected: String,
@@ -298,7 +298,7 @@ struct ToolRunView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 8)
                         .background(RoundedRectangle(cornerRadius: 8)
-                            .fill(selected == option ? accent : Color(white: 0.95)))
+                            .fill(selected == option ? accent : Color(uiColor: .tertiarySystemFill)))
                 }
                 .buttonStyle(.plain)
             }
@@ -312,7 +312,7 @@ struct ToolRunView: View {
                 Text(title).font(.system(size: 12))
                 Spacer()
                 Text(text).font(.system(size: 12, design: .monospaced))
-                    .foregroundColor(Color(white: 0.45))
+                    .foregroundColor(Theme.secondary)
             }
             Slider(value: value, in: range).tint(accent)
         }
@@ -328,7 +328,7 @@ struct ToolRunView: View {
     private func hint(_ text: String) -> some View {
         Text(text)
             .font(.system(size: 11))
-            .foregroundColor(Color(white: 0.5))
+            .foregroundColor(Theme.secondary)
     }
 
     // MARK: - 开始

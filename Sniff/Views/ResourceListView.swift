@@ -112,7 +112,7 @@ struct ResourceListView: View {
                     ProgressView()
                     Text(batchText.isEmpty ? "处理中…" : batchText)
                         .font(.footnote)
-                        .foregroundColor(Color(white: 0.3))
+                        .foregroundColor(Theme.label)
                 }
                 .padding(.horizontal, 26)
                 .padding(.vertical, 20)
@@ -157,7 +157,7 @@ struct ResourceListView: View {
                 .padding(.vertical, 10)
             }
         }
-        .background(Color(white: 0.985))
+        .background(Color(uiColor: .secondarySystemGroupedBackground))
     }
 
     private func chip(title: String, count: Int, active: Bool, action: @escaping () -> Void) -> some View {
@@ -174,8 +174,8 @@ struct ResourceListView: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 7)
             .background(Capsule().fill(active ? Color(red: 0.93, green: 0.93, blue: 0.95) : Color.white))
-            .foregroundColor(active ? accent : Color(white: 0.4))
-            .overlay(Capsule().stroke(Color(white: 0.88), lineWidth: active ? 0 : 1))
+            .foregroundColor(active ? accent : Theme.secondary)
+            .overlay(Capsule().stroke(Theme.separator, lineWidth: active ? 0 : 1))
         }
         .buttonStyle(.plain)
     }
@@ -200,7 +200,7 @@ struct ResourceListView: View {
                 if selecting {
                     Image(systemName: selected.contains(item.id) ? "checkmark.circle.fill" : "circle")
                         .font(.system(size: 21))
-                        .foregroundColor(selected.contains(item.id) ? accent : Color(white: 0.78))
+                        .foregroundColor(selected.contains(item.id) ? accent : Theme.tertiary)
                 }
                 // 只有左侧内容区响应点击预览，避免和右侧按钮、下方"重试"冲突
                 HStack(spacing: 12) {
@@ -217,21 +217,21 @@ struct ResourceListView: View {
                                 .font(.system(size: 11, weight: .semibold))
                                 .padding(.horizontal, 5)
                                 .padding(.vertical, 1.5)
-                                .background(Capsule().fill(Color(white: 0.93)))
-                                .foregroundColor(Color(white: 0.35))
+                                .background(Capsule().fill(Color(uiColor: .tertiarySystemFill)))
+                                .foregroundColor(Theme.secondary)
                             if item.isPreparing {
                                 Text("准备中…")
                                     .font(.system(size: 11))
-                                    .foregroundColor(Color(white: 0.5))
+                                    .foregroundColor(Theme.secondary)
                             } else if let meta = item.metaText {
                                 Text(meta)
                                     .font(.system(size: 11))
-                                    .foregroundColor(Color(white: 0.5))
+                                    .foregroundColor(Theme.secondary)
                                     .lineLimit(1)
                             }
                             Text(item.url.host ?? "")
                                 .font(.system(size: 11))
-                                .foregroundColor(Color(white: 0.55))
+                                .foregroundColor(Theme.secondary)
                                 .lineLimit(1)
                         }
                     }
@@ -250,7 +250,7 @@ struct ResourceListView: View {
             }
         }
         .padding(12)
-        .background(Color(white: 0.985))
+        .background(Color(uiColor: .secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
@@ -262,7 +262,7 @@ struct ResourceListView: View {
                 .scaledToFill()
         } else if item.isPreparing {
             ZStack {
-                Color(white: 0.93)
+                Color(uiColor: .tertiarySystemFill)
                 ProgressView().scaleEffect(0.7)
             }
         } else if item.kind == .image {
@@ -280,10 +280,10 @@ struct ResourceListView: View {
 
     private func thumbPlaceholder(_ kind: ResourceItem.Kind) -> some View {
         ZStack {
-            Color(white: 0.93)
+            Color(uiColor: .tertiarySystemFill)
             Image(systemName: kind.symbol)
                 .font(.system(size: 18))
-                .foregroundColor(Color(white: 0.45))
+                .foregroundColor(Theme.secondary)
         }
     }
 
@@ -301,7 +301,7 @@ struct ResourceListView: View {
         } else if let task, case .queued = task.status {
             Text("排队中")
                 .font(.system(size: 12, weight: .medium))
-                .foregroundColor(Color(white: 0.5))
+                .foregroundColor(Theme.secondary)
         } else if let task, case .paused = task.status {
             Button {
                 downloadManager.resume(task)
@@ -338,7 +338,7 @@ struct ResourceListView: View {
         case .queued:
             Text("排队中，空闲后自动开始")
                 .font(.caption)
-                .foregroundColor(Color(white: 0.5))
+                .foregroundColor(Theme.secondary)
         case .running:
             ProgressView(value: min(max(task.progress, 0), 1))
                 .progressViewStyle(.linear)
@@ -359,7 +359,7 @@ struct ResourceListView: View {
                         .foregroundColor(accent)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
-                        .background(Capsule().fill(Color(white: 0.93)))
+                        .background(Capsule().fill(Color(uiColor: .tertiarySystemFill)))
                 }
                 .buttonStyle(.plain)
             }
@@ -408,7 +408,7 @@ struct ResourceListView: View {
                         .foregroundColor(accent)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
-                        .background(Capsule().fill(Color(white: 0.93)))
+                        .background(Capsule().fill(Color(uiColor: .tertiarySystemFill)))
                 }
                 .buttonStyle(.plain)
             }
@@ -547,13 +547,13 @@ struct ResourceListView: View {
             Spacer()
             Image(systemName: "dot.radiowaves.left.and.right")
                 .font(.system(size: 40, weight: .light))
-                .foregroundColor(Color(white: 0.75))
+                .foregroundColor(Theme.tertiary)
             Text("还没有嗅探到资源")
                 .font(.system(size: 16, weight: .medium))
-                .foregroundColor(Color(white: 0.35))
+                .foregroundColor(Theme.secondary)
             Text("打开网页、点一下视频播放，\n图片 / 视频 / m3u8 会自动收集到这里")
                 .font(.system(size: 13))
-                .foregroundColor(Color(white: 0.55))
+                .foregroundColor(Theme.secondary)
                 .multilineTextAlignment(.center)
             Spacer()
         }
@@ -581,13 +581,13 @@ struct VideoThumb: View {
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            Color(white: 0.93)
+            Color(uiColor: .tertiarySystemFill)
             if let image {
                 Image(uiImage: image).resizable().scaledToFill()
             } else {
                 Image(systemName: item.kind.symbol)
                     .font(.system(size: 18))
-                    .foregroundColor(Color(white: 0.45))
+                    .foregroundColor(Theme.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 if item.kind == .video {
                     Image(systemName: "play.circle.fill")

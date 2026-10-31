@@ -69,7 +69,7 @@ struct ToolboxView: View {
                 Button { showSettings = true } label: {
                     Image(systemName: "gearshape")
                         .font(.system(size: 17, weight: .medium))
-                        .foregroundColor(Color(white: 0.35))
+                        .foregroundColor(Theme.label)
                 }
             }
         }

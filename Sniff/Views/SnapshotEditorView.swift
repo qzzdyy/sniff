@@ -31,7 +31,7 @@ struct SnapshotEditorView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(white: 0.08).ignoresSafeArea()
+                Theme.label.ignoresSafeArea()
 
                 GeometryReader { geo in
                     let fitted = fit(image.size, in: geo.size)
@@ -272,13 +272,13 @@ struct InsSnapListView: View {
                     VStack(spacing: 12) {
                         Image(systemName: "camera")
                             .font(.system(size: 38, weight: .light))
-                            .foregroundColor(Color(white: 0.72))
+                            .foregroundColor(Theme.tertiary)
                         Text("还没有网页快照")
                             .font(.system(size: 15, weight: .medium))
                             .foregroundColor(accent)
                         Text("在浏览器底栏点「截长图」，框选后就会存在这里")
                             .font(.system(size: 12))
-                            .foregroundColor(Color(white: 0.5))
+                            .foregroundColor(Theme.secondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 44)
                     }
@@ -290,7 +290,7 @@ struct InsSnapListView: View {
                             ForEach(files, id: \.self) { url in
                                 Button { preview = url } label: {
                                     ZStack {
-                                        Color(white: 0.93)
+                                        Color(uiColor: .tertiarySystemFill)
                                         if let img = UIImage(contentsOfFile: url.path) {
                                             Image(uiImage: img).resizable().scaledToFill()
                                         }

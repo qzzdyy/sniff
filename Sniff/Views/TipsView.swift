@@ -38,7 +38,7 @@ struct TipsView: View {
                     Spacer()
                     Button("跳过") { onFinish() }
                         .font(.system(size: 13))
-                        .foregroundColor(Color(white: 0.45))
+                        .foregroundColor(Theme.secondary)
                         .padding(.horizontal, 18).padding(.top, 14)
                 }
 
@@ -59,7 +59,7 @@ struct TipsView: View {
                                 .foregroundColor(accent)
                             Text(item.body)
                                 .font(.system(size: 14))
-                                .foregroundColor(Color(white: 0.45))
+                                .foregroundColor(Theme.secondary)
                                 .multilineTextAlignment(.center)
                                 .lineSpacing(4)
                                 .padding(.horizontal, 42)
@@ -74,7 +74,7 @@ struct TipsView: View {
                 HStack(spacing: 7) {
                     ForEach(0..<pages.count, id: \.self) { index in
                         Capsule()
-                            .fill(index == page ? accent : Color(white: 0.82))
+                            .fill(index == page ? accent : Theme.tertiary)
                             .frame(width: index == page ? 18 : 6, height: 6)
                             .animation(.easeInOut(duration: 0.2), value: page)
                     }

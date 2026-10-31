@@ -93,7 +93,7 @@ struct SnapDetailView: View {
                         toast = "已清空"
                     } label: {
                         Image(systemName: "trash")
-                            .foregroundColor(Color(white: 0.35))
+                            .foregroundColor(Theme.secondary)
                     }
                 }
             }
@@ -177,7 +177,7 @@ struct SnapDetailView: View {
                 if !otherItems.isEmpty {
                     Text("其他文件")
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(Color(white: 0.45))
+                        .foregroundColor(Theme.secondary)
                         .padding(.horizontal, 16)
                     ForEach(otherItems) { item in rowCard(item) }
                 }
@@ -196,7 +196,7 @@ struct SnapDetailView: View {
                     .font(.system(size: 9, weight: .bold))
             }
             .font(.system(size: 12, weight: .medium))
-            .foregroundColor(Color(white: 0.42))
+            .foregroundColor(Theme.secondary)
             .padding(.horizontal, 9).padding(.vertical, 4)
             .background(Capsule().fill(Color.white))
         }
@@ -213,9 +213,9 @@ struct SnapDetailView: View {
                 .foregroundColor(accent)
             Text("\(count)")
                 .font(.system(size: 12, weight: .medium))
-                .foregroundColor(Color(white: 0.55))
+                .foregroundColor(Theme.secondary)
                 .padding(.horizontal, 6).padding(.vertical, 1)
-                .background(Capsule().fill(Color(white: 0.90)))
+                .background(Capsule().fill(Theme.separator))
             Spacer()
             if let extra { extra }
             Button {
@@ -223,7 +223,7 @@ struct SnapDetailView: View {
             } label: {
                 Image(systemName: expanded.wrappedValue ? "chevron.up" : "chevron.down")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(Color(white: 0.55))
+                    .foregroundColor(Theme.secondary)
             }
             .buttonStyle(.plain)
         }
@@ -261,7 +261,7 @@ struct SnapDetailView: View {
                             Image(systemName: "ellipsis")
                             Text("+\(imageItems.count - 9)").font(.system(size: 12, weight: .semibold))
                         }
-                        .foregroundColor(Color(white: 0.4))
+                        .foregroundColor(Theme.secondary)
                     }
                 }
                 .buttonStyle(.plain)
@@ -301,12 +301,12 @@ struct SnapDetailView: View {
                     .lineLimit(2)
                 Text(item.metaText ?? item.url.host ?? "")
                     .font(.system(size: 11))
-                    .foregroundColor(Color(white: 0.55))
+                    .foregroundColor(Theme.secondary)
                     .lineLimit(1)
                 if item.kind == .hls {
                     Text(item.hlsState == .valid ? "可用 · 点按创建任务" : "校验中…")
                         .font(.system(size: 11))
-                        .foregroundColor(item.hlsState == .valid ? Color(red: 0.13, green: 0.6, blue: 0.35) : Color(white: 0.55))
+                        .foregroundColor(item.hlsState == .valid ? Color(red: 0.13, green: 0.6, blue: 0.35) : Theme.secondary)
                 }
             }
             Spacer(minLength: 6)
@@ -328,7 +328,7 @@ struct SnapDetailView: View {
             selectionBadge(item)
         }
         .padding(10)
-        .background(RoundedRectangle(cornerRadius: 12).fill(Color.white))
+        .background(RoundedRectangle(cornerRadius: 10).fill(Theme.card))
         .overlay(
             RoundedRectangle(cornerRadius: 12)
                 .stroke(selected.contains(item.id) ? accent : Color.clear, lineWidth: 2)
@@ -377,7 +377,7 @@ struct SnapDetailView: View {
                 .buttonStyle(.plain)
             } else {
                 ZStack {
-                    Circle().stroke(Color(white: 0.88), lineWidth: 3).frame(width: 24, height: 24)
+                    Circle().stroke(Theme.separator, lineWidth: 3).frame(width: 24, height: 24)
                     Circle()
                         .trim(from: 0, to: max(0.02, task.progress))
                         .stroke(accent, style: StrokeStyle(lineWidth: 3, lineCap: .round))
@@ -458,7 +458,7 @@ struct SnapDetailView: View {
                 let ids = Set(allFiltered.map(\.id))
                 if isAllSelected { selected.subtract(ids) } else { selected.formUnion(ids) }
             }
-            Rectangle().fill(Color(white: 0.90)).frame(width: 1, height: 26)
+            Rectangle().fill(Theme.separator).frame(width: 1, height: 26)
             Menu {
                 Button {
                     saveMenuContent()
@@ -482,13 +482,13 @@ struct SnapDetailView: View {
                         .font(.system(size: 18, weight: .medium))
                     Text(L10n.t("g.save")).font(.system(size: 10))
                 }
-                .foregroundColor(selected.isEmpty ? Color(white: 0.7) : accent)
+                .foregroundColor(selected.isEmpty ? Theme.separator : accent)
                 .frame(maxWidth: .infinity)
                 .contentShape(Rectangle())
             }
             .disabled(selected.isEmpty)
 
-            Rectangle().fill(Color(white: 0.90)).frame(width: 1, height: 26)
+            Rectangle().fill(Theme.separator).frame(width: 1, height: 26)
             toolButton(title: filter.isActive ? "已筛选" : "筛选",
                        symbol: filter.isActive ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle",
                        enabled: true) {
@@ -497,7 +497,7 @@ struct SnapDetailView: View {
         }
         .frame(height: 52)
         .background(.regularMaterial)
-        .overlay(Rectangle().fill(Color(white: 0.90)).frame(height: 0.5), alignment: .top)
+        .overlay(Rectangle().fill(Theme.separator).frame(height: 0.5), alignment: .top)
         .overlay(alignment: .bottom) {
             Text(toast ?? " ")
                 .font(.system(size: 11))
@@ -519,7 +519,7 @@ struct SnapDetailView: View {
                 Image(systemName: symbol).font(.system(size: 18, weight: .medium))
                 Text(title).font(.system(size: 10))
             }
-            .foregroundColor(enabled ? accent : Color(white: 0.7))
+            .foregroundColor(enabled ? accent : Theme.separator)
             .frame(maxWidth: .infinity)
             .contentShape(Rectangle())
         }
@@ -532,13 +532,13 @@ struct SnapDetailView: View {
         VStack(spacing: 14) {
             Image(systemName: "dot.radiowaves.left.and.right")
                 .font(.system(size: 40, weight: .light))
-                .foregroundColor(Color(white: 0.72))
+                .foregroundColor(Theme.tertiary)
             Text("还没有嗅到资源")
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(accent)
             Text("在「浏览」里打开网页，视频 / 音频 / 图片 / M3U8 会自动出现在这里")
                 .font(.system(size: 13))
-                .foregroundColor(Color(white: 0.5))
+                .foregroundColor(Theme.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 48)
         }
@@ -596,7 +596,7 @@ struct SnapThumb: View {
 
     var body: some View {
         ZStack {
-            Color(white: 0.94)
+            Color(uiColor: .tertiarySystemFill)
             if let image {
                 Image(uiImage: image).resizable().scaledToFill()
             } else if let thumb = item.thumbnail {
@@ -604,7 +604,7 @@ struct SnapThumb: View {
             } else {
                 Image(systemName: item.kind.symbol)
                     .font(.system(size: 20, weight: .light))
-                    .foregroundColor(Color(white: 0.62))
+                    .foregroundColor(Theme.secondary)
             }
         }
         .clipped()

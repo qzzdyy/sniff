@@ -77,7 +77,7 @@ struct M3TaskManagerView: View {
                 }
                 .frame(height: 54)
                 .background(.regularMaterial)
-                .overlay(Rectangle().fill(Color(white: 0.9)).frame(height: 0.5), alignment: .top)
+                .overlay(Rectangle().fill(Theme.separator).frame(height: 0.5), alignment: .top)
             }
             .sheet(item: Binding(get: { reportText.map(ReportPayload.init) },
                                  set: { if $0 == nil { reportText = nil } })) { payload in
@@ -90,13 +90,13 @@ struct M3TaskManagerView: View {
         VStack(spacing: 12) {
             Image(systemName: segment == 0 ? "tray" : "checkmark.circle")
                 .font(.system(size: 38, weight: .light))
-                .foregroundColor(Color(white: 0.72))
+                .foregroundColor(Theme.tertiary)
             Text(segment == 0 ? "没有进行中的任务" : "还没有完成的任务")
                 .font(.system(size: 15, weight: .medium))
                 .foregroundColor(accent)
             Text("在浏览器里嗅到 M3U8 后点「创建」，任务会出现在这里")
                 .font(.system(size: 12))
-                .foregroundColor(Color(white: 0.5))
+                .foregroundColor(Theme.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 50)
         }
@@ -113,20 +113,20 @@ struct M3TaskManagerView: View {
                         .lineLimit(2)
                     Text(task.urlString)
                         .font(.system(size: 10))
-                        .foregroundColor(Color(white: 0.55))
+                        .foregroundColor(Theme.secondary)
                         .lineLimit(1)
                 }
                 Spacer()
                 Text(task.byteText)
                     .font(.system(size: 11))
-                    .foregroundColor(Color(white: 0.5))
+                    .foregroundColor(Theme.secondary)
             }
 
             // 进度条 + 状态
             HStack(spacing: 8) {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(Color(white: 0.92))
+                        Capsule().fill(Color(uiColor: .tertiarySystemFill))
                         Capsule()
                             .fill(task.state == .failed ? Color(red: 0.85, green: 0.25, blue: 0.2) : accent)
                             .frame(width: max(3, geo.size.width * CGFloat(task.progress)))
@@ -136,7 +136,7 @@ struct M3TaskManagerView: View {
 
                 Text(task.state.isFinished ? "100%" : "\(Int(task.progress * 100))%")
                     .font(.system(size: 11, weight: .medium, design: .monospaced))
-                    .foregroundColor(Color(white: 0.45))
+                    .foregroundColor(Theme.secondary)
                     .frame(width: 38, alignment: .trailing)
             }
 
@@ -144,12 +144,12 @@ struct M3TaskManagerView: View {
                 stateDot(task.state)
                 Text(task.stateText)
                     .font(.system(size: 11))
-                    .foregroundColor(task.state == .failed ? Color(red: 0.8, green: 0.22, blue: 0.18) : Color(white: 0.45))
+                    .foregroundColor(task.state == .failed ? Color(red: 0.8, green: 0.22, blue: 0.18) : Theme.secondary)
                     .lineLimit(1)
                 Spacer()
                 Text(relative(task.createdAt))
                     .font(.system(size: 10))
-                    .foregroundColor(Color(white: 0.6))
+                    .foregroundColor(Theme.secondary)
             }
 
             HStack(spacing: 8) {
@@ -165,13 +165,13 @@ struct M3TaskManagerView: View {
             }
         }
         .padding(12)
-        .background(RoundedRectangle(cornerRadius: 14).fill(Color.white))
+        .background(RoundedRectangle(cornerRadius: 10).fill(Theme.card))
     }
 
     private func stateDot(_ state: M3Task.State) -> some View {
         Circle()
             .fill(state == .failed ? Color(red: 0.85, green: 0.25, blue: 0.2)
-                  : (state == .finished ? Color(red: 0.13, green: 0.6, blue: 0.35) : Color(white: 0.55)))
+                  : (state == .finished ? Color(red: 0.13, green: 0.6, blue: 0.35) : Theme.secondary))
             .frame(width: 6, height: 6)
     }
 
@@ -182,9 +182,9 @@ struct M3TaskManagerView: View {
                 Image(systemName: symbol).font(.system(size: 10, weight: .semibold))
                 Text(title).font(.system(size: 11, weight: .medium))
             }
-            .foregroundColor(enabled ? (danger ? Color(red: 0.8, green: 0.22, blue: 0.18) : accent) : Color(white: 0.72))
+            .foregroundColor(enabled ? (danger ? Color(red: 0.8, green: 0.22, blue: 0.18) : accent) : Theme.tertiary)
             .padding(.horizontal, 9).padding(.vertical, 6)
-            .background(Capsule().fill(Color(white: 0.95)))
+            .background(Capsule().fill(Color(uiColor: .tertiarySystemFill)))
         }
         .buttonStyle(.plain)
         .disabled(!enabled)

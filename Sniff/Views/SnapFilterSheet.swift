@@ -108,7 +108,7 @@ struct SnapFilterSheet: View {
 
                     section("文件大小") {
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("不小于").font(.system(size: 12)).foregroundColor(Color(white: 0.5))
+                            Text("不小于").font(.system(size: 12)).foregroundColor(Theme.secondary)
                             HStack(spacing: 8) {
                                 ForEach(sizeOptions, id: \.1) { option in
                                     pill(option.0, active: draft.minSizeMB == option.1) {
@@ -116,7 +116,7 @@ struct SnapFilterSheet: View {
                                     }
                                 }
                             }
-                            Text("不大于").font(.system(size: 12)).foregroundColor(Color(white: 0.5))
+                            Text("不大于").font(.system(size: 12)).foregroundColor(Theme.secondary)
                             HStack(spacing: 8) {
                                 ForEach(sizeOptions, id: \.1) { option in
                                     pill(option.0, active: draft.maxSizeMB == option.1) {
@@ -137,7 +137,7 @@ struct SnapFilterSheet: View {
                     Button("重置") {
                         draft = SnapFilter()
                     }
-                    .foregroundColor(Color(white: 0.4))
+                    .foregroundColor(Theme.secondary)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(L10n.t("g.finish")) {
@@ -157,7 +157,7 @@ struct SnapFilterSheet: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(title)
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(Color(white: 0.45))
+                .foregroundColor(Theme.secondary)
             content()
         }
     }

@@ -140,7 +140,7 @@ struct SettingsView: View {
         HStack(spacing: 12) {
             Image(systemName: symbol)
                 .font(.system(size: 17, weight: .regular))
-                .foregroundColor(Color(white: 0.28))
+                .foregroundColor(Theme.label)
                 .frame(width: 24)
             Text(title)
                 .font(.system(size: 17))
@@ -348,7 +348,7 @@ struct SnapshotSettings: View {
                             .foregroundColor(.secondary)
                         Image(systemName: "chevron.right")
                             .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(Color(white: 0.75))
+                            .foregroundColor(Theme.separator)
                     }
                 }
                 Toggle("自动抓取网页快照", isOn: $autoSnapshot)

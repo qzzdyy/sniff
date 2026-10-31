@@ -28,7 +28,7 @@ struct BrowserView: View {
     @FocusState private var addressFocused: Bool
 
     private let accent = Color(red: 0.11, green: 0.11, blue: 0.12)
-    private let barBG = Color(white: 0.98)
+    private let barBG = Color(uiColor: .secondarySystemGroupedBackground)
 
     var body: some View {
         VStack(spacing: 0) {
@@ -119,7 +119,7 @@ struct BrowserView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(Color(white: 0.45))
+                        .foregroundColor(Theme.secondary)
                     TextField("输入网址或搜索内容", text: $addressText)
                         .font(.system(size: 15))
                         .focused($addressFocused)
@@ -132,7 +132,7 @@ struct BrowserView: View {
                         Button { addressText = "" } label: {
                             Image(systemName: "xmark.circle.fill")
                                 .font(.system(size: 14))
-                                .foregroundColor(Color(white: 0.7))
+                                .foregroundColor(Theme.separator)
                         }
                         .buttonStyle(.plain)
                     }
@@ -164,7 +164,7 @@ struct BrowserView: View {
                     HStack(spacing: 5) {
                         Image(systemName: webViewStore.currentURL?.scheme == "https" ? "lock.fill" : "globe")
                             .font(.system(size: 10, weight: .semibold))
-                            .foregroundColor(Color(white: 0.5))
+                            .foregroundColor(Theme.secondary)
                         Text(displayTitle)
                             .font(.system(size: 14))
                             .foregroundColor(accent)
@@ -203,7 +203,7 @@ struct BrowserView: View {
         Button(action: action) {
             Image(systemName: symbol)
                 .font(.system(size: 15, weight: .medium))
-                .foregroundColor(enabled ? accent : Color(white: 0.75))
+                .foregroundColor(enabled ? accent : Theme.tertiary)
                 .frame(width: 30, height: 38)
         }
         .disabled(!enabled)
@@ -259,7 +259,7 @@ struct BrowserView: View {
             } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(Color(white: 0.5))
+                    .foregroundColor(Theme.secondary)
             }
             .buttonStyle(.plain)
         }
@@ -283,12 +283,12 @@ struct BrowserView: View {
                     } label: {
                         ZStack(alignment: .topTrailing) {
                             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .fill(Color(white: 0.93))
+                                .fill(Color(uiColor: .tertiarySystemFill))
                                 .frame(width: 64, height: 64)
                                 .overlay(
                                     Image(systemName: item.kind.symbol)
                                         .font(.system(size: 20))
-                                        .foregroundColor(Color(white: 0.45))
+                                        .foregroundColor(Theme.secondary)
                                 )
                             Text(item.kind.shortTag)
                                 .font(.system(size: 9, weight: .bold))
@@ -310,11 +310,11 @@ struct BrowserView: View {
                             .foregroundColor(accent)
                         Text(L10n.t("ins.filter.all"))
                             .font(.system(size: 10))
-                            .foregroundColor(Color(white: 0.5))
+                            .foregroundColor(Theme.secondary)
                     }
                     .frame(width: 64, height: 64)
                     .background(RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color(white: 0.95)))
+                        .fill(Color(uiColor: .tertiarySystemFill)))
                 }
                 .buttonStyle(.plain)
             }
@@ -356,7 +356,7 @@ struct BrowserView: View {
                             .foregroundColor(accent)
                         Text("资源")
                             .font(.system(size: 10))
-                            .foregroundColor(Color(white: 0.45))
+                            .foregroundColor(Theme.secondary)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 6)
@@ -384,10 +384,10 @@ struct BrowserView: View {
             VStack(spacing: 3) {
                 Image(systemName: symbol)
                     .font(.system(size: 19, weight: .regular))
-                    .foregroundColor(active ? accent : Color(white: 0.35))
+                    .foregroundColor(active ? accent : Theme.secondary)
                 Text(title)
                     .font(.system(size: 10))
-                    .foregroundColor(active ? accent : Color(white: 0.45))
+                    .foregroundColor(active ? accent : Theme.secondary)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 6)
@@ -466,10 +466,10 @@ struct BrowserHistorySheet: View {
                     VStack(spacing: 10) {
                         Image(systemName: "clock")
                             .font(.system(size: 34))
-                            .foregroundColor(Color(white: 0.7))
+                            .foregroundColor(Theme.separator)
                         Text(L10n.t("history.no_records"))
                             .font(.system(size: 14))
-                            .foregroundColor(Color(white: 0.5))
+                            .foregroundColor(Theme.secondary)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {

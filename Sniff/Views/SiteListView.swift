@@ -17,7 +17,7 @@ struct SiteListView: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            Color(white: 0.975).ignoresSafeArea()
+            Color(uiColor: .secondarySystemGroupedBackground).ignoresSafeArea()
 
             TabView(selection: $page) {
                 welcomePage.tag(0)
@@ -43,7 +43,7 @@ struct SiteListView: View {
         HStack(spacing: 6) {
             ForEach(0..<2, id: \.self) { i in
                 Capsule()
-                    .fill(i == page ? accent : Color(white: 0.78))
+                    .fill(i == page ? accent : Theme.tertiary)
                     .frame(width: i == page ? 16 : 6, height: 6)
                     .animation(.easeInOut(duration: 0.2), value: page)
             }
@@ -73,12 +73,12 @@ struct SiteListView: View {
                         Text("创意").foregroundColor(accent).bold()
                     }
                     .font(.system(size: 20, weight: .semibold))
-                    .foregroundColor(Color(white: 0.25))
+                    .foregroundColor(Theme.label)
                     .padding(.top, 6)
 
                     Text("输入网址即可开始，浏览器会自动嗅探页面里的媒体资源")
                         .font(.system(size: 12))
-                        .foregroundColor(Color(white: 0.55))
+                        .foregroundColor(Theme.secondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
                 }
@@ -87,7 +87,7 @@ struct SiteListView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("最近打开")
                             .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(Color(white: 0.42))
+                            .foregroundColor(Theme.secondary)
                             .padding(.horizontal, 18)
 
                         ScrollView(.horizontal, showsIndicators: false) {
@@ -121,7 +121,7 @@ struct SiteListView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("常用")
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(Color(white: 0.42))
+                        .foregroundColor(Theme.secondary)
                         .padding(.horizontal, 18)
 
                     LazyVGrid(columns: columns, spacing: 16) {
@@ -141,7 +141,7 @@ struct SiteListView: View {
                             .font(.system(size: 10, weight: .semibold))
                     }
                     .font(.system(size: 12))
-                    .foregroundColor(Color(white: 0.5))
+                    .foregroundColor(Theme.secondary)
                 }
                 .padding(.top, 4)
                 .padding(.bottom, 30)
@@ -208,7 +208,7 @@ struct SiteListView: View {
                 if siteStore.sites.isEmpty {
                     Text("还没有书签，点右上角 + 添加")
                         .font(.system(size: 13))
-                        .foregroundColor(Color(white: 0.55))
+                        .foregroundColor(Theme.secondary)
                         .frame(maxWidth: .infinity)
                         .padding(.top, 60)
                 } else {
@@ -222,7 +222,7 @@ struct SiteListView: View {
 
                 Text("长按站点可编辑或删除")
                     .font(.system(size: 11))
-                    .foregroundColor(Color(white: 0.65))
+                    .foregroundColor(Theme.secondary)
                     .frame(maxWidth: .infinity)
                     .padding(.top, 8)
                     .padding(.bottom, 40)
