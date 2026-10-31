@@ -133,7 +133,7 @@ struct SnapshotEditorView: View {
 
     @State private var currentGeometry: CGSize?
 
-    private func cornerHandles: some View {
+    private func cornerHandles() -> some View {
         ZStack {
             ForEach(0..<4, id: \.self) { index in
                 Circle()
