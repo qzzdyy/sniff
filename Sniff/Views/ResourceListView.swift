@@ -51,7 +51,7 @@ struct ResourceListView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     if selecting {
-                        Button("全选") {
+                        Button(L10n.t("g.select_all")) {
                             selected = Set(filteredItems.map { $0.id })
                         }
                         .foregroundColor(accent)
@@ -62,7 +62,7 @@ struct ResourceListView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     if !resourceStore.items.isEmpty {
                         if selecting {
-                            Button("完成") {
+                            Button(L10n.t("g.finish")) {
                                 selecting = false
                                 selected.removeAll()
                             }
@@ -101,8 +101,8 @@ struct ResourceListView: View {
                          downloadManager: downloadManager)
         }
         .confirmationDialog("删除选中的 \(selected.count) 项？", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
-            Button("删除", role: .destructive) { batchDelete() }
-            Button("取消", role: .cancel) {}
+            Button(L10n.t("g.delete", role: .destructive) { batchDelete() }
+            Button(L10n.t("g.cancel", role: .cancel) {}
         } message: {
             Text("本地已下载的文件会一起删掉，此操作不可恢复")
         }
@@ -403,7 +403,7 @@ struct ResourceListView: View {
                 Button {
                     downloadManager.retry(task)
                 } label: {
-                    Text("重试")
+                    Text(L10n.t("m3.create.retry"))
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(accent)
                         .padding(.horizontal, 10)

@@ -178,7 +178,7 @@ struct SiteListView: View {
             Button(role: .destructive) {
                 siteStore.remove(id: site.id)
             } label: {
-                Label("删除", systemImage: "trash")
+                Label(L10n.t("g.delete"), systemImage: "trash")
             }
         }
     }
@@ -249,14 +249,14 @@ struct SiteListView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
+                    Button(L10n.t("g.cancel")) {
                         showAdd = false
                         draftTitle = ""
                         draftURL = ""
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("保存") {
+                    Button(L10n.t("g.save")) {
                         siteStore.add(title: draftTitle, urlString: draftURL)
                         draftTitle = ""
                         draftURL = ""
@@ -294,10 +294,10 @@ struct SiteListView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") { editingSite = nil }
+                    Button(L10n.t("g.cancel")) { editingSite = nil }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("保存") {
+                    Button(L10n.t("g.save")) {
                         siteStore.update(id: site.id, title: draftTitle, urlString: draftURL)
                         editingSite = nil
                     }

@@ -224,7 +224,7 @@ struct BrowserSettings: View {
                     .foregroundColor(.secondary)
             }
         }
-        .navigationTitle("浏览器")
+        .navigationTitle(L10n.t("settings.ins.b_settings"))
         .navigationBarTitleDisplayMode(.inline)
         .overlay(alignment: .bottom) {
             if let toast {
@@ -277,7 +277,7 @@ struct MultiTaskSettings: View {
                     .foregroundColor(.secondary)
             }
         }
-        .navigationTitle("任务管理")
+        .navigationTitle(L10n.t("m3.task_manage.task_manage"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -292,8 +292,8 @@ struct MultiTaskAdvanced: View {
         Form {
             Section("模式") {
                 Picker("调度", selection: $downloadMode) {
-                    Text("均衡").tag("balance")
-                    Text("速度优先").tag("speed")
+                    Text(L10n.t("m3.mtask.mode_balance")).tag("balance")
+                    Text(L10n.t("m3.mtask.mode_speed")).tag("speed")
                 }
                 .pickerStyle(.segmented)
                 .onChange(of: downloadMode) { mode in
@@ -327,7 +327,7 @@ struct MultiTaskAdvanced: View {
                     .foregroundColor(.secondary)
             }
         }
-        .navigationTitle("多任务设置")
+        .navigationTitle(L10n.t("m3.mtask.mtask_setting"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -357,7 +357,7 @@ struct SnapshotSettings: View {
             }
         }
         .sheet(isPresented: $showList) { InsSnapListView() }
-        .navigationTitle("快照")
+        .navigationTitle(L10n.t("settings.ins.snapshot"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -374,7 +374,7 @@ struct FilterSettings: View {
                 Text("用来过滤掉统计、埋点、1×1 像素这类噪音资源。")
             }
         }
-        .navigationTitle("默认筛选")
+        .navigationTitle(L10n.t("settings.ins.default_filter"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -396,7 +396,7 @@ struct MoreSettings: View {
                     .foregroundColor(.secondary)
             }
         }
-        .navigationTitle("更多设置")
+        .navigationTitle(L10n.t("settings.ins.more_settings"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -406,7 +406,7 @@ struct HistoryView: View {
     var body: some View {
         List {
             if resourceStore.items.isEmpty {
-                Text("暂无记录").foregroundColor(.secondary)
+                Text(L10n.t("history.no_records")).foregroundColor(.secondary)
             } else {
                 ForEach(resourceStore.items) { item in
                     VStack(alignment: .leading, spacing: 3) {
@@ -420,7 +420,7 @@ struct HistoryView: View {
                 }
             }
         }
-        .navigationTitle("历史记录")
+        .navigationTitle(L10n.t("settings.history_actions"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -436,7 +436,7 @@ struct OpenSourcePage: View {
                     .foregroundColor(.secondary)
             }
         }
-        .navigationTitle("开源")
+        .navigationTitle(L10n.t("settings.opensource"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }

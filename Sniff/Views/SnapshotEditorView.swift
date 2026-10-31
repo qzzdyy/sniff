@@ -86,14 +86,14 @@ struct SnapshotEditorView: View {
             .toolbarColorScheme(.dark, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("取消") {
+                    Button(L10n.t("g.cancel")) {
                         onSaved?(nil)
                         dismiss()
                     }
                     .foregroundColor(.white)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("全选") {
+                    Button(L10n.t("g.select_all")) {
                         if let geo = currentGeometry {
                             selection = CGRect(origin: .zero, size: geo)
                         }
@@ -313,12 +313,12 @@ struct InsSnapListView: View {
                                     } label: { Label("复制", systemImage: "doc.on.doc") }
                                     Button {
                                         ShareSheetPresenter.present([url])
-                                    } label: { Label("分享", systemImage: "square.and.arrow.up") }
+                                    } label: { Label(L10n.t("ins.b.save.share"), systemImage: "square.and.arrow.up") }
                                     Divider()
                                     Button(role: .destructive) {
                                         try? FileManager.default.removeItem(at: url)
                                         reload()
-                                    } label: { Label("删除", systemImage: "trash") }
+                                    } label: { Label(L10n.t("g.delete"), systemImage: "trash") }
                                 }
                             }
                         }

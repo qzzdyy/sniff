@@ -130,7 +130,7 @@ struct SnapFilterSheet: View {
                 .padding(18)
             }
             .background(Color(red: 0.949, green: 0.949, blue: 0.965))
-            .navigationTitle("筛选")
+            .navigationTitle(L10n.t("ins.filter.filter"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -140,7 +140,7 @@ struct SnapFilterSheet: View {
                     .foregroundColor(Color(white: 0.4))
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("完成") {
+                    Button(L10n.t("g.finish")) {
                         filter = draft
                         dismiss()
                     }

@@ -72,7 +72,7 @@ struct ResultView: View {
                 .padding(18)
             }
             .background(Color(red: 0.949, green: 0.949, blue: 0.965))
-            .navigationTitle("完成")
+            .navigationTitle(L10n.t("g.finish"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

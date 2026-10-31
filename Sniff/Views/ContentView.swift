@@ -106,7 +106,7 @@ struct ContentView: View {
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
                     .foregroundColor(accent)
             }
-            Text("M3U8")
+            Text(L10n.t("ins.snap.m3u_unit"))
                 .font(.system(size: 9, weight: .medium))
                 .foregroundColor(Color(white: 0.4))
         }

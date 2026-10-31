@@ -114,12 +114,12 @@ struct SnapDetailView: View {
                 if let exporting { DocumentExporter(urls: exporting) }
             }
             .alert("删除选中的 \(selected.count) 项？", isPresented: $confirmDelete) {
-                Button("删除", role: .destructive) {
+                Button(L10n.t("g.delete", role: .destructive) {
                     let ids = selected
                     resourceStore.remove(ids: ids)
                     selected.removeAll()
                 }
-                Button("取消", role: .cancel) {}
+                Button(L10n.t("g.cancel", role: .cancel) {}
             }
             .overlay(alignment: .bottom) {
                 if let toast {
@@ -411,7 +411,7 @@ struct SnapDetailView: View {
             Button {
                 pendingM3 = item
             } label: {
-                Label("创建下载任务", systemImage: "list.bullet.rectangle")
+                Label(L10n.t("m3.create.create_task"), systemImage: "list.bullet.rectangle")
             }
         } else {
             Button {
@@ -425,26 +425,26 @@ struct SnapDetailView: View {
             UIPasteboard.general.string = item.url.absoluteString
             toast = "链接已复制"
         } label: {
-            Label("复制链接", systemImage: "doc.on.doc")
+            Label(L10n.t("m3.create.copy_link"), systemImage: "doc.on.doc")
         }
         Button {
             UIApplication.shared.open(item.url)
         } label: {
-            Label("在浏览器打开", systemImage: "safari")
+            Label(L10n.t("m3.create.open_in_safari"), systemImage: "safari")
         }
         Button {
             toggle(item)
             if !selected.contains(item.id) { selected.insert(item.id) }
             saveMenuContent()
         } label: {
-            Label("分享", systemImage: "square.and.arrow.up")
+            Label(L10n.t("ins.b.save.share"), systemImage: "square.and.arrow.up")
         }
         Divider()
         Button(role: .destructive) {
             resourceStore.remove(ids: [item.id])
             selected.remove(item.id)
         } label: {
-            Label("删除", systemImage: "trash")
+            Label(L10n.t("g.delete"), systemImage: "trash")
         }
     }
 
@@ -462,25 +462,25 @@ struct SnapDetailView: View {
             Menu {
                 Button {
                     saveMenuContent()
-                } label: { Label("保存到「文件」", systemImage: "folder") }
+                } label: { Label(L10n.t("ins.b.save.save_2_file"), systemImage: "folder") }
                 Button {
                     saveToAlbum()
-                } label: { Label("保存到相册", systemImage: "photo.on.rectangle") }
+                } label: { Label(L10n.t("ins.b.save.save_2_album"), systemImage: "photo.on.rectangle") }
                 Button {
                     shareSelected()
-                } label: { Label("分享", systemImage: "square.and.arrow.up") }
+                } label: { Label(L10n.t("ins.b.save.share"), systemImage: "square.and.arrow.up") }
                 Button {
                     downloadSelected()
                 } label: { Label("开始下载", systemImage: "arrow.down.circle") }
                 Divider()
                 Button(role: .destructive) {
                     confirmDelete = true
-                } label: { Label("删除", systemImage: "trash") }
+                } label: { Label(L10n.t("g.delete"), systemImage: "trash") }
             } label: {
                 VStack(spacing: 3) {
                     Image(systemName: "square.and.arrow.down")
                         .font(.system(size: 18, weight: .medium))
-                    Text("保存").font(.system(size: 10))
+                    Text(L10n.t("g.save")).font(.system(size: 10))
                 }
                 .foregroundColor(selected.isEmpty ? Color(white: 0.7) : accent)
                 .frame(maxWidth: .infinity)

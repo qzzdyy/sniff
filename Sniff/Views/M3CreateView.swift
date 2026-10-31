@@ -39,7 +39,7 @@ struct M3CreateView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("取消") { dismiss() }
+                    Button(L10n.t("g.cancel")) { dismiss() }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
@@ -47,7 +47,7 @@ struct M3CreateView: View {
                             UIPasteboard.general.string = sourceURL.absoluteString
                             showToast("已拷贝")
                         } label: {
-                            Label("拷贝链接", systemImage: "doc.on.doc")
+                            Label(L10n.t("m3.create.copy_link"), systemImage: "doc.on.doc")
                         }
                         Button {
                             UIApplication.shared.open(sourceURL)
@@ -96,7 +96,7 @@ struct M3CreateView: View {
             Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 34))
                 .foregroundColor(Color(white: 0.6))
-            Text("解析失败!")
+            Text(L10n.t("m3.create.parse_failed"))
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(accent)
             Text(text)
@@ -107,7 +107,7 @@ struct M3CreateView: View {
             Button {
                 load()
             } label: {
-                Text("重试")
+                Text(L10n.t("m3.create.retry"))
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.white)
                     .padding(.horizontal, 24)
@@ -125,7 +125,7 @@ struct M3CreateView: View {
         List {
             Section {
                 HStack(spacing: 8) {
-                    Text("名称:")
+                    Text(L10n.t("m3.create.name"))
                         .font(.system(size: 14))
                         .foregroundColor(Color(white: 0.45))
                     TextField("未命名", text: $taskName)

@@ -21,7 +21,7 @@ struct PreviewSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("完成") { dismiss() }.foregroundColor(.white)
+                    Button(L10n.t("g.finish")) { dismiss() }.foregroundColor(.white)
                 }
             }
             .toolbarBackground(.black, for: .navigationBar)

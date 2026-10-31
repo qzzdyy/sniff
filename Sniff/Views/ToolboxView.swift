@@ -117,7 +117,7 @@ struct ToolboxView: View {
                     showPicker = true
                 }
             }
-            Button("取消", role: .cancel) { pendingTool = nil }
+            Button(L10n.t("g.cancel", role: .cancel) { pendingTool = nil }
         }
         .overlay(alignment: .bottom) { bottomBar }
     }
@@ -206,7 +206,7 @@ struct ToolboxView: View {
                 Section {
                     LabeledContent("总时长", value: String(format: "%.1f 秒", trimDuration))
                     HStack {
-                        Text("开始")
+                        Text(L10n.t("m3.task_manage.start"))
                         Spacer()
                         TextField("0", value: $trimStart, format: .number)
                             .keyboardType(.decimalPad)
@@ -231,13 +231,13 @@ struct ToolboxView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") {
+                    Button(L10n.t("g.cancel")) {
                         showTrim = false
                         pendingTool = nil
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("开始") {
+                    Button(L10n.t("m3.task_manage.start")) {
                         guard let url = trimURL else { return }
                         pendingChoice = "\(trimStart)|\(trimEnd)"
                         showTrim = false

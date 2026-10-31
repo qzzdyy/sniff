@@ -142,7 +142,7 @@ struct BrowserView: View {
                 .background(RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(Color(red: 0.95, green: 0.95, blue: 0.96)))
 
-                Button("取消") {
+                Button(L10n.t("g.cancel")) {
                     editing = false
                     addressFocused = false
                     addressText = webViewStore.currentURL?.absoluteString ?? ""
@@ -248,7 +248,7 @@ struct BrowserView: View {
                 .foregroundColor(.primary)
                 .lineLimit(2)
             Spacer(minLength: 4)
-            Button("重试") {
+            Button(L10n.t("m3.create.retry")) {
                 webViewStore.loadError = nil
                 webViewStore.reload()
             }
@@ -308,7 +308,7 @@ struct BrowserView: View {
                         Text("\(resourceStore.items.count)")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(accent)
-                        Text("全部")
+                        Text(L10n.t("ins.filter.all"))
                             .font(.system(size: 10))
                             .foregroundColor(Color(white: 0.5))
                     }
@@ -467,7 +467,7 @@ struct BrowserHistorySheet: View {
                         Image(systemName: "clock")
                             .font(.system(size: 34))
                             .foregroundColor(Color(white: 0.7))
-                        Text("暂无记录")
+                        Text(L10n.t("history.no_records"))
                             .font(.system(size: 14))
                             .foregroundColor(Color(white: 0.5))
                     }
@@ -496,7 +496,7 @@ struct BrowserHistorySheet: View {
                     }
                 }
             }
-            .navigationTitle("历史记录")
+            .navigationTitle(L10n.t("settings.history_actions"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -549,12 +549,12 @@ struct BrowserSettingsSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("完成") { dismiss() }
+                    Button(L10n.t("g.finish")) { dismiss() }
                 }
             }
             .confirmationDialog("确定清除？", isPresented: $confirmClear, titleVisibility: .visible) {
                 Button("清除", role: .destructive) { clearWebsiteData() }
-                Button("取消", role: .cancel) {}
+                Button(L10n.t("g.cancel", role: .cancel) {}
             }
         }
     }

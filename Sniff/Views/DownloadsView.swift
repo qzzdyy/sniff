@@ -123,7 +123,7 @@ struct DownloadsView: View {
                             downloadManager.remove(task)
                             selected.remove(task.id)
                         } label: {
-                            Label("删除", systemImage: "trash")
+                            Label(L10n.t("g.delete"), systemImage: "trash")
                         }
                     }
                     .swipeActions(edge: .leading) {
@@ -131,7 +131,7 @@ struct DownloadsView: View {
                             Button {
                                 downloadManager.pause(task)
                             } label: {
-                                Label("暂停", systemImage: "pause")
+                                Label(L10n.t("m3.task_manage.pause"), systemImage: "pause")
                             }
                             .tint(.orange)
                         } else if task.isPaused {
@@ -289,7 +289,7 @@ struct DownloadsView: View {
                 .font(.system(size: 22))
                 .foregroundColor(Color(red: 0.13, green: 0.13, blue: 0.14))
         case .failed:
-            Button("重试") { downloadManager.retry(task) }
+            Button(L10n.t("m3.create.retry")) { downloadManager.retry(task) }
                 .font(.system(size: 12, weight: .medium))
                 .foregroundColor(accent)
         }

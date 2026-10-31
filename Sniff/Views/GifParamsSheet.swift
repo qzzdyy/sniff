@@ -38,7 +38,7 @@ struct GifParamsSheet: View {
                     // segmentMode
                     Picker("", selection: $draft.highQuality) {
                         Text("最高质量").tag(true)
-                        Text("快速").tag(false)
+                        Text(L10n.t("gif.mode_normal")).tag(false)
                     }
                     .pickerStyle(.segmented)
 
@@ -77,7 +77,7 @@ struct GifParamsSheet: View {
                     // sliderFPS + buttonFPS + labelFPSHint
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            Text("帧率").font(.system(size: 13, weight: .semibold))
+                            Text(L10n.t("gif.fps")).font(.system(size: 13, weight: .semibold))
                             Spacer()
                             Text("\(draft.fps) fps")
                                 .font(.system(size: 13, weight: .medium, design: .monospaced))
@@ -147,10 +147,10 @@ struct GifParamsSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("取消") { dismiss() }
+                    Button(L10n.t("g.cancel")) { dismiss() }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("完成") {
+                    Button(L10n.t("g.finish")) {
                         params = draft
                         dismiss()
                     }
