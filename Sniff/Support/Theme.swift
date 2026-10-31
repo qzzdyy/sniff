@@ -16,7 +16,7 @@ enum Theme {
     /// 分组标题：系统 grouped 风格的小号灰字
     static let sectionTitle = Font.footnote.weight(.regular)
     /// 工具格子的文字
-    static let tileTitle = Font.caption1
+    static let tileTitle = Font.caption
     /// 工具格子的图标
     static let tileIcon = Font.system(size: 26, weight: .light)
 }
