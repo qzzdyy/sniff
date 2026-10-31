@@ -321,14 +321,29 @@ struct MultiTaskAdvanced: View {
 
 struct SnapshotSettings: View {
     @State private var autoSnapshot = true
+    @State private var showList = false
     var body: some View {
         Form {
             Section {
+                Button {
+                    showList = true
+                } label: {
+                    HStack {
+                        Text("查看网页快照")
+                        Spacer()
+                        Text("\(SnapshotStore.all().count)")
+                            .foregroundColor(.secondary)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(Color(white: 0.75))
+                    }
+                }
                 Toggle("自动抓取网页快照", isOn: $autoSnapshot)
             } footer: {
                 Text("快照会在嗅探到视频时同步保存一张页面截图，方便回看。")
             }
         }
+        .sheet(isPresented: $showList) { InsSnapListView() }
         .navigationTitle("快照")
         .navigationBarTitleDisplayMode(.inline)
     }

@@ -23,6 +23,7 @@ struct BrowserView: View {
     @State private var showResources = false
     @State private var showHistory = false
     @State private var showBrowserSettings = false
+    @State private var snapshotPayload: SnapshotPayload?
     @State private var toast: String?
     @FocusState private var addressFocused: Bool
 
@@ -56,6 +57,9 @@ struct BrowserView: View {
         }
         .background(Color.white)
         .ignoresSafeArea(.keyboard, edges: .bottom)
+        .fullScreenCover(item: $snapshotPayload) { payload in
+            SnapshotEditorView(image: payload.image)
+        }
         .sheet(isPresented: $showResources, onDismiss: { resourceStore.resetBadge() }) {
             SnapDetailView(resourceStore: resourceStore, downloadManager: downloadManager)
         }
@@ -413,18 +417,9 @@ struct BrowserView: View {
                 DispatchQueue.main.async { showToast("截长图失败") }
                 return
             }
-            PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
-                guard status == .authorized || status == .limited else {
-                    DispatchQueue.main.async { showToast("没有相册权限") }
-                    return
-                }
-                PHPhotoLibrary.shared().performChanges {
-                    PHAssetChangeRequest.creationRequestForAsset(from: image)
-                } completionHandler: { ok, _ in
-                    DispatchQueue.main.async {
-                        showToast(ok ? "已保存至相册" : "保存失败")
-                    }
-                }
+            // 先进框选编辑器（原版 box_selection 的交互），不直接落相册
+            DispatchQueue.main.async {
+                snapshotPayload = SnapshotPayload(image: image)
             }
         }
     }
