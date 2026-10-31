@@ -65,6 +65,10 @@ jobs:
           du -sh Payload/Sniff.app
           echo "---- ffmpeg 符号 ----"
           strings Payload/Sniff.app/Sniff | grep -c "libavformat\|FFmpegKit" || echo 0
+          echo "---- 源码校验 ----"
+          grep -n "线程配置" Sniff/Views/SettingsView.swift | head -3 || echo "源码无此串"
+          echo "---- 产物校验 ----"
+          strings -a Payload/Sniff.app/Sniff | grep -c "线程配置" || echo 0
 
       - uses: actions/upload-artifact@v4
         with:
