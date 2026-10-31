@@ -5,7 +5,6 @@ import WebKit
 struct SettingsView: View {
     @ObservedObject var webViewStore: WebViewStore
     @ObservedObject var resourceStore: ResourceStore
-    @ObservedObject var downloadManager: DownloadManager
 
     @AppStorage("compressDoneAlert") private var compressDoneAlert = true
 
@@ -188,43 +187,6 @@ struct BrowserSettings: View {
     }
 }
 
-struct MultiTaskSettings: View {
-    @ObservedObject var downloadManager: DownloadManager
-
-    var body: some View {
-        Form {
-            if downloadManager.tasks.isEmpty {
-                Section {
-                    Text("还没有任务")
-                        .font(.callout)
-                        .foregroundColor(.secondary)
-                }
-            } else {
-                Section("全部任务") {
-                    ForEach(downloadManager.tasks) { task in
-                        HStack {
-                            Text(task.item.url.lastPathComponent)
-                                .font(.callout)
-                                .lineLimit(1)
-                            Spacer()
-                            Text(task.status.text)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-            }
-            Section {
-                Text("完整的任务列表在「下载」页。")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-        }
-        .navigationTitle(L10n.t("m3.task_manage.task_manage"))
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
 struct MultiTaskAdvanced: View {
     @AppStorage("maxConcurrent") private var maxConcurrent = 4
     @AppStorage("maxConcurrentTasks") private var maxConcurrentTasks = 1
@@ -340,81 +302,6 @@ struct MoreSettings: View {
             }
         }
         .navigationTitle(L10n.t("settings.about"))
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
-struct HistoryView: View {
-    @ObservedObject var resourceStore: ResourceStore
-    var body: some View {
-        List {
-            if resourceStore.items.isEmpty {
-                Text(L10n.t("history.no_records")).foregroundColor(.secondary)
-            } else {
-                ForEach(resourceStore.items) { item in
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(item.url.lastPathComponent.isEmpty ? item.url.host ?? "资源" : item.url.lastPathComponent)
-                            .font(.callout)
-                            .lineLimit(1)
-                        Text(item.kind.title)
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                }
-            }
-        }
-        .navigationTitle(L10n.t("settings.history_actions"))
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
-struct OpenSourcePage: View {
-    var body: some View {
-        Form {
-            Section {
-                Text("本项目使用的开源组件：")
-                    .font(.callout)
-                Text("· FFmpeg / FFmpegKit（LGPL / GPL）\n· 界面基于 SwiftUI、WebKit 系统框架")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-        }
-        .navigationTitle(L10n.t("settings.opensource"))
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
-struct SimpleTextPage: View {
-    let title: String
-    let text: String
-
-    var body: some View {
-        ScrollView {
-            Text(text)
-                .font(.callout)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(20)
-        }
-        .navigationTitle(title)
-        .navigationBarTitleDisplayMode(.inline)
-    }
-}
-
-struct HelpPage: View {
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 14) {
-                Text("网页打不开怎么办").font(.headline)
-                Text("1. 页面顶部如果出现橙色提示条，把上面的文字发出来，那就是真实原因。\n2. 先试「刷新」，再试切换 UA（浏览器 → 模拟设备 → 桌面 Safari）。\n3. 国内站点多数要求 HTTPS，纯 HTTP 地址可能被拦。\n4. 部分站点会主动唤起 App，本版本已阻止自动跳转，不会再被甩出应用。")
-                    .font(.callout)
-                Text("视频嗅探不到怎么办").font(.headline)
-                Text("先点一次播放。绝大多数站点的地址在 play 事件之后才会出现，嗅探脚本会在那一刻上报。")
-                    .font(.callout)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(20)
-        }
-        .navigationTitle("帮助")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

@@ -75,8 +75,7 @@ struct ContentView: View {
                 // 4. 设置
                 NavigationStack {
                     SettingsView(webViewStore: webViewStore,
-                                 resourceStore: resourceStore,
-                                 downloadManager: downloadManager)
+                                 resourceStore: resourceStore)
                 }
                 .tabItem { Label("设置", systemImage: "gearshape") }
             }
