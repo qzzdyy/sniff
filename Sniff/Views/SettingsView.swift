@@ -8,95 +8,47 @@ struct SettingsView: View {
     @ObservedObject var downloadManager: DownloadManager
 
     @AppStorage("compressDoneAlert") private var compressDoneAlert = true
-    @AppStorage("floatWindow") private var floatWindow = false
-    @AppStorage("homeStyle") private var homeStyle = "image_text"
 
     @State private var cacheText = "0 B"
     @State private var showM3 = false
     @State private var toast: String?
 
-    private var version: String {
-        Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
-    }
-
     var body: some View {
         Form {
-                // 1. 小工具们
-                Section(L10n.t("settings.section.tools")) {
-                    Picker(L10n.t("settings.style"), selection: $homeStyle) {
-                        Text(L10n.t("settings.style_image_text")).tag("image_text")
-                        Text(L10n.t("settings.style_text")).tag("text")
-                    }
-                    .pickerStyle(.segmented)
+            // 1. 探索
+            Section("探索") {
+                NavigationLink { BrowserSettings(webViewStore: webViewStore, resourceStore: resourceStore) } label: {
+                    rowLabel(L10n.t("settings.ins.b_settings"), "safari")
                 }
-
-                // 2. 探索灵感
-                Section(L10n.t("settings.section.inspiration")) {
-                    NavigationLink { BrowserSettings(webViewStore: webViewStore, resourceStore: resourceStore) } label: {
-                        rowLabel(L10n.t("settings.ins.b_settings"), "safari")
-                    }
-                    NavigationLink { FilterSettings() } label: {
-                        rowLabel(L10n.t("settings.ins.default_filter"), "line.3.horizontal.decrease.circle")
-                    }
-                    NavigationLink { MoreSettings() } label: {
-                        rowLabel(L10n.t("settings.ins.more_settings"), "ellipsis.circle")
-                    }
-                    NavigationLink { SnapshotSettings() } label: {
-                        rowLabel(L10n.t("settings.ins.snapshot"), "camera")
-                    }
+                NavigationLink { FilterSettings() } label: {
+                    rowLabel(L10n.t("settings.ins.default_filter"), "line.3.horizontal.decrease.circle")
                 }
-
-                // 3. 探索灵感 - M3U8
-                Section(L10n.t("settings.section.inspiration_m3u8")) {
-                    Button { showM3 = true } label: {
-                        rowLabel(L10n.t("settings.m3.task"), "list.bullet.indent")
-                    }
-                    NavigationLink { MultiTaskAdvanced() } label: {
-                        rowLabel(L10n.t("settings.m3.multitask"), "square.stack.3d.down.right")
-                    }
-                    Toggle(isOn: $floatWindow) {
-                        rowLabel(L10n.t("settings.m3.float"), "rectangle.on.rectangle")
-                    }
-                }
-
-                // 4. 设置
-                Section(L10n.t("settings.section.settings")) {
-                    NavigationLink { HistoryView(resourceStore: resourceStore) } label: {
-                        rowLabel(L10n.t("settings.history_actions"), "clock.arrow.circlepath")
-                    }
-                    row(L10n.t("settings.clear_cache"), "trash", value: cacheText) { clearCache() }
-                    Toggle(isOn: $compressDoneAlert) {
-                        rowLabel(L10n.t("settings.video_compress_sound_switch"), "bell")
-                    }
-                }
-
-                // 5. 反馈
-                Section(L10n.t("settings.section.feedback")) {
-                    NavigationLink { OpenSourcePage() } label: {
-                        rowLabel(L10n.t("settings.opensource"), "chevron.left.forwardslash.chevron.right")
-                    }
-                    NavigationLink { MoreSettings() } label: {
-                        rowLabel(L10n.t("settings.about"), "info.circle")
-                    }
-                }
-
-                Section {
-                } footer: {
-                    VStack(spacing: 6) {
-                        Text("\(L10n.t("settings.version")): \(version)")
-                            .font(.footnote)
-                            .foregroundColor(.secondary)
-                        HStack(spacing: 14) {
-                            Text(L10n.t("settings.privacy"))
-                            Text(L10n.t("settings.terms"))
-                        }
-                        .font(.footnote)
-                        .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 4)
+                NavigationLink { SnapshotSettings() } label: {
+                    rowLabel(L10n.t("settings.ins.snapshot"), "camera")
                 }
             }
+
+            // 2. 线程配置
+            Section("线程配置") {
+                Button { showM3 = true } label: {
+                    rowLabel(L10n.t("settings.m3.task"), "list.bullet.indent")
+                }
+                NavigationLink { MultiTaskAdvanced() } label: {
+                    rowLabel(L10n.t("settings.m3.multitask"), "square.stack.3d.down.right")
+                }
+            }
+
+            // 3. 其他
+            Section("其他") {
+                row(L10n.t("settings.clear_cache"), "trash", value: cacheText) { clearCache() }
+                Toggle(isOn: $compressDoneAlert) {
+                    rowLabel(L10n.t("settings.video_compress_sound_switch"), "bell")
+                }
+                NavigationLink { MoreSettings() } label: {
+                    rowLabel(L10n.t("settings.about"), "info.circle")
+                }
+            }
+        }
         .navigationTitle("设置")
         .onAppear(perform: updateCacheText)
         .sheet(isPresented: $showM3) { M3TaskManagerView() }
@@ -387,7 +339,7 @@ struct MoreSettings: View {
                     .foregroundColor(.secondary)
             }
         }
-        .navigationTitle(L10n.t("settings.ins.more_settings"))
+        .navigationTitle(L10n.t("settings.about"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }
