@@ -57,7 +57,7 @@ struct SnapshotEditorView: View {
                                 .frame(width: selection.width, height: selection.height)
                                 .position(x: selection.midX, y: selection.midY)
 
-                            cornerHandles
+                            cornerHandles()
                         }
                     }
                     .contentShape(Rectangle())
