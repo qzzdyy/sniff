@@ -10,6 +10,7 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage("compressDoneAlert") private var compressDoneAlert = true
     @AppStorage("floatWindow") private var floatWindow = false
+    @AppStorage("homeStyle") private var homeStyle = "image_text"
 
     @State private var cacheText = "0 B"
     @State private var showM3 = false
@@ -22,63 +23,76 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section {
-                    row("清除缓存", "trash", value: cacheText) { clearCache() }
+                // 1. 小工具们
+                Section(L10n.t("settings.section.tools")) {
+                    Picker(L10n.t("settings.style"), selection: $homeStyle) {
+                        Text(L10n.t("settings.style_image_text")).tag("image_text")
+                        Text(L10n.t("settings.style_text")).tag("text")
+                    }
+                    .pickerStyle(.segmented)
                 }
 
-                Section("探索灵感") {
-                    NavigationLink { SnapshotSettings() } label: {
-                        rowLabel("快照", "camera", value: "0")
+                // 2. 探索灵感
+                Section(L10n.t("settings.section.inspiration")) {
+                    NavigationLink { BrowserSettings(webViewStore: webViewStore, resourceStore: resourceStore) } label: {
+                        rowLabel(L10n.t("settings.ins.b_settings"), "safari")
                     }
                     NavigationLink { FilterSettings() } label: {
-                        rowLabel("默认筛选", "line.3.horizontal.decrease.circle")
-                    }
-                    NavigationLink { BrowserSettings(webViewStore: webViewStore, resourceStore: resourceStore) } label: {
-                        rowLabel("浏览器", "safari")
+                        rowLabel(L10n.t("settings.ins.default_filter"), "line.3.horizontal.decrease.circle")
                     }
                     NavigationLink { MoreSettings() } label: {
-                        rowLabel("更多设置", "ellipsis")
+                        rowLabel(L10n.t("settings.ins.more_settings"), "ellipsis.circle")
+                    }
+                    NavigationLink { SnapshotSettings() } label: {
+                        rowLabel(L10n.t("settings.ins.snapshot"), "camera")
                     }
                 }
 
-                Section("探索灵感 - M3U8") {
-                    Toggle(isOn: $floatWindow) {
-                        rowLabel("浮窗显示 / 隐藏", "square")
-                    }
-                    .tint(Color(red: 0.20, green: 0.78, blue: 0.35))
-
+                // 3. 探索灵感 - M3U8
+                Section(L10n.t("settings.section.inspiration_m3u8")) {
                     Button { showM3 = true } label: {
-                        rowLabel("M3U8 任务管理", "list.bullet.indent")
-                    }
-                    NavigationLink { MultiTaskSettings(downloadManager: downloadManager) } label: {
-                        rowLabel("下载任务", "arrow.down.circle")
+                        rowLabel(L10n.t("settings.m3.task"), "list.bullet.indent")
                     }
                     NavigationLink { MultiTaskAdvanced() } label: {
-                        rowLabel("多任务设置", "square.stack.3d.down.right")
+                        rowLabel(L10n.t("settings.m3.multitask"), "square.stack.3d.down.right")
+                    }
+                    Toggle(isOn: $floatWindow) {
+                        rowLabel(L10n.t("settings.m3.float"), "rectangle.on.rectangle")
                     }
                 }
 
-                Section("小工具们") {
+                // 4. 设置
+                Section(L10n.t("settings.section.settings")) {
                     NavigationLink { HistoryView(resourceStore: resourceStore) } label: {
-                        rowLabel("历史记录", "clock")
+                        rowLabel(L10n.t("settings.history_actions"), "clock.arrow.circlepath")
                     }
+                    row(L10n.t("settings.clear_cache"), "trash", value: cacheText) { clearCache() }
                     Toggle(isOn: $compressDoneAlert) {
-                        rowLabel("视频压缩完成后提示", "alarm")
+                        rowLabel(L10n.t("settings.video_compress_sound_switch"), "bell")
                     }
-                    .tint(Color(red: 0.20, green: 0.78, blue: 0.35))
+                }
+
+                // 5. 反馈
+                Section(L10n.t("settings.section.feedback")) {
+                    NavigationLink { OpenSourcePage() } label: {
+                        rowLabel(L10n.t("settings.opensource"), "chevron.left.forwardslash.chevron.right")
+                    }
+                    NavigationLink { MoreSettings() } label: {
+                        rowLabel(L10n.t("settings.about"), "info.circle")
+                    }
                 }
 
                 Section {
                 } footer: {
                     VStack(spacing: 6) {
-                        Text("版本: \(version)")
-                            .font(.system(size: 12))
+                        Text("\(L10n.t("settings.version")): \(version)")
+                            .font(.footnote)
                             .foregroundColor(.secondary)
                         HStack(spacing: 14) {
-                            Text("隐私权政策")
-                            Text("使用条款")
+                            Text(L10n.t("settings.privacy"))
+                            Text(L10n.t("settings.terms"))
                         }
-                        .font(.system(size: 12))
+                        .font(.footnote)
                         .foregroundColor(.secondary)
                     }
                     .frame(maxWidth: .infinity)
@@ -89,8 +103,7 @@ struct SettingsView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("取消") { dismiss() }
-                        .foregroundColor(Color(red: 0.11, green: 0.11, blue: 0.12))
+                    Button(L10n.t("g.finish")) { dismiss() }
                 }
             }
             .onAppear(perform: updateCacheText)

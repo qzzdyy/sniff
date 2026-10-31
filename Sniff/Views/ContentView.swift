@@ -39,6 +39,8 @@ struct ContentView: View {
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
+            // 原版只有两个主界面：小工具（VC_Main）与探索灵感（VC_Browser）。
+            // 下载任务不单独占 tab，进度由浮窗和「任务管理」承载。
             TabView {
                 NavigationStack {
                     ToolboxView(webViewStore: webViewStore,
@@ -46,7 +48,7 @@ struct ContentView: View {
                                 downloadManager: downloadManager,
                                 siteStore: siteStore)
                 }
-                .tabItem { Label("工具", systemImage: "square.grid.2x2") }
+                .tabItem { Label(L10n.t("settings.section.tools"), systemImage: "square.grid.2x2") }
 
                 NavigationStack {
                     BrowserView(webViewStore: webViewStore,
@@ -55,12 +57,23 @@ struct ContentView: View {
                                 siteStore: siteStore)
                         .navigationBarHidden(true)
                 }
-                .tabItem { Label("浏览", systemImage: "safari") }
-
-                DownloadsView(downloadManager: downloadManager)
-                    .tabItem { Label("下载", systemImage: "arrow.down.circle") }
+                .tabItem { Label(L10n.t("main.inspiration"), systemImage: "safari") }
             }
-            .tint(accent)
+
+            if floatWindow, let active = m3Store.currentActive {
+                floatingBall(active)
+            }
+        }
+        .sheet(isPresented: $showM3Manager) {
+            M3TaskManagerView()
+        }
+        .fullScreenCover(isPresented: $showTips) {
+            TipsView { hasSeenTips = true; showTips = false }
+        }
+        .onAppear {
+            if !hasSeenTips { showTips = true }
+        }
+    }
 
             if floatWindow, let active = m3Store.currentActive {
                 floatingBall(active)

@@ -13,6 +13,7 @@ struct ToolboxView: View {
     @ObservedObject var siteStore: SiteStore
 
     @AppStorage("compressDoneAlert") private var compressDoneAlert = true
+    @AppStorage("homeStyle") private var homeStyle = "image_text"
 
     @State private var showSettings = false
     @State private var showBrowser = false
@@ -25,7 +26,6 @@ struct ToolboxView: View {
     @State private var choiceDialog = false
     @State private var lastOutput: URL?
     @State private var runPayload: ToolRunPayload?
-    @State private var page = 0
 
     // 音频裁剪
     @State private var showTrim = false
@@ -37,29 +37,32 @@ struct ToolboxView: View {
     // 实况照片
     @State private var showLivePicker = false
 
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 3)
-    private let bg = Color(red: 0.949, green: 0.949, blue: 0.965)
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 0), count: 4)
+
+    // 原版 VC_Main 的分组顺序，标题与项名都取自 Localizable.strings
+    private let sections: [(key: String, tools: [ToolAction])] = [
+        ("main.photo",   [.imageResize, .imageTargetSize, .imageConvert, .livePhotoToVideo]),
+        ("main.gif",     [.videoToGIF, .livePhotoToGIF, .gifToMP4, .gifFrames]),
+        ("main.video",   [.videoCompress, .videoCompressSize, .videoToMP4,
+                          .videoExtractAudio, .videoGrabFrame]),
+        ("main.audio",   [.audioTrim, .audioConvert, .audioMerge]),
+        ("main.pdf",     [.toPDF]),
+        ("main.archive", [.unzip, .zip])
+    ]
 
     var body: some View {
-        VStack(spacing: 0) {
-            inspireCard
-                .padding(.horizontal, 18)
-                .padding(.top, 6)
-                .padding(.bottom, 4)
-
-            // 原版 VC_Main：UICollectionView 横向分页 + pageControl
-            TabView(selection: $page) {
-                pageView("图片", [.imageConvert, .imageResize, .imageTargetSize, .livePhotoToVideo]).tag(0)
-                pageView("GIF / 动图", [.videoToGIF, .livePhotoToGIF, .gifToMP4, .gifFrames]).tag(1)
-                pageView("视频", [.videoToMP4, .videoCompress, .videoCompressSize, .videoGrabFrame, .videoExtractAudio]).tag(2)
-                pageView("音频与文件", [.audioConvert, .audioTrim, .audioMerge, .toPDF, .unzip, .zip]).tag(3)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 26) {
+                inspirationBanner
+                ForEach(sections, id: \.key) { section in
+                    toolSection(section.key, section.tools)
+                }
             }
-            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-
-            pageDots
-                .padding(.bottom, 8)
+            .padding(.horizontal, 16)
+            .padding(.top, 4)
+            .padding(.bottom, 40)
         }
-        .background(bg)
+        .background(Theme.groupedBG)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -119,70 +122,48 @@ struct ToolboxView: View {
         .overlay(alignment: .bottom) { bottomBar }
     }
 
-    // MARK: - 探索灵感
+    // MARK: - 探索灵感（顶部推广条，原版 VC_Main 的第一个区块）
 
-    private var inspireCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("探索灵感")
-                .font(.system(size: 21, weight: .semibold))
-                .foregroundColor(Color(white: 0.13))
+    private var inspirationBanner: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(L10n.t("main.inspiration"))
+                .font(.headline)
+                .foregroundColor(Theme.label)
+
+            Text(L10n.t("main.inspiration.tip"))
+                .font(.footnote)
+                .foregroundColor(Theme.secondary)
+                .fixedSize(horizontal: false, vertical: true)
 
             Button { showBrowser = true } label: {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.white)
-                    VStack(spacing: 6) {
-                        Image(systemName: "lightbulb")
-                            .font(.system(size: 27, weight: .light))
-                            .foregroundColor(Color(white: 0.55))
-                        Text("打开嗅探浏览器")
-                            .font(.system(size: 12))
-                            .foregroundColor(Color(white: 0.45))
-                    }
+                HStack(spacing: 2) {
+                    Text(L10n.t("main.start_explore_inspiration"))
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .semibold))
                 }
-                .frame(height: 96)
+                .font(.subheadline)
             }
-            .buttonStyle(.plain)
+            .padding(.top, 2)
         }
-        .padding(.top, 6)
-    }
-
-    // MARK: - 分页
-
-    private func pageView(_ title: String, _ items: [ToolAction]) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                section(title, items)
-                    .padding(.top, 12)
-            }
-            .padding(.horizontal, 18)
-            .padding(.bottom, 26)
-        }
-    }
-
-    private var pageDots: some View {
-        HStack(spacing: 6) {
-            ForEach(0..<4, id: \.self) { index in
-                Capsule()
-                    .fill(index == page ? Color(white: 0.25) : Color(white: 0.82))
-                    .frame(width: index == page ? 16 : 6, height: 6)
-                    .animation(.easeInOut(duration: 0.2), value: page)
-            }
-        }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(14)
+        .background(Theme.card)
+        .cornerRadius(10)
     }
 
     // MARK: - 分组
 
-    private func section(_ title: String, _ items: [ToolAction]) -> some View {
-        VStack(alignment: .leading, spacing: 13) {
-            Text(title)
-                .font(.system(size: 21, weight: .semibold))
-                .foregroundColor(Color(white: 0.13))
-            LazyVGrid(columns: columns, spacing: 12) {
+    private func toolSection(_ key: String, _ items: [ToolAction]) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(L10n.t(key))
+                .font(Theme.sectionTitle)
+                .foregroundColor(Theme.secondary)
+                .padding(.leading, 4)
+
+            LazyVGrid(columns: columns, spacing: 14) {
                 ForEach(items) { tool in
                     Button { tap(tool) } label: {
-                        ToolCard(tool: tool)
+                        ToolCard(tool: tool, textOnly: homeStyle == "text")
                     }
                     .buttonStyle(.plain)
                 }
@@ -348,42 +329,36 @@ struct ToolboxView: View {
 
 struct ToolCard: View {
     let tool: ToolAction
+    var textOnly: Bool = false
 
     var body: some View {
-        ZStack(alignment: .topTrailing) {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.white)
+        VStack(spacing: 6) {
+            if !textOnly {
+                ZStack(alignment: .topTrailing) {
+                    Image(systemName: tool.symbol)
+                        .font(Theme.tileIcon)
+                        .foregroundColor(Theme.icon)
+                        .frame(height: 30)
 
-            VStack(spacing: 0) {
-                Spacer(minLength: 0)
-                Image(systemName: tool.symbol)
-                    .font(.system(size: 25, weight: .light))
-                    .foregroundColor(Color(white: 0.32))
-                Spacer(minLength: 0)
-                Text(tool.title)
-                    .font(.system(size: 12.5))
-                    .foregroundColor(Color(white: 0.18))
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .padding(.horizontal, 6)
-                Spacer().frame(height: 14)
+                    if let badge = tool.badge {
+                        Text(badge)
+                            .font(.system(size: 8, weight: .semibold))
+                            .foregroundColor(Theme.secondary)
+                            .offset(x: 10, y: -2)
+                    }
+                }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-            if let badge = tool.badge {
-                Text(badge)
-                    .font(.system(size: 9, weight: .bold))
-                    .foregroundColor(Color(white: 0.45))
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 2)
-                    .background(
-                        RoundedRectangle(cornerRadius: 4, style: .continuous)
-                            .stroke(Color(white: 0.75), lineWidth: 0.8)
-                    )
-                    .padding(6)
-            }
+            Text(tool.title)
+                .font(Theme.tileTitle)
+                .foregroundColor(Theme.label)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .frame(height: 104)
+        .frame(maxWidth: .infinity)
+        .frame(height: textOnly ? 40 : 76, alignment: textOnly ? .center : .top)
+        .contentShape(Rectangle())
     }
 }
 
@@ -399,29 +374,32 @@ enum ToolAction: String, Identifiable, CaseIterable {
 
     var id: String { rawValue }
 
-    var title: String {
+    /// 文案 key，全部来自原版 Localizable.strings
+    var titleKey: String {
         switch self {
-        case .imageConvert:       return "格式转换"
-        case .imageResize:        return "压缩 / 缩放"
-        case .imageTargetSize:    return "压缩到指定大小"
-        case .livePhotoToVideo:   return "实况照片 转 MP4"
-        case .videoToGIF:         return "视频 转 GIF"
-        case .livePhotoToGIF:     return "实况照片 转 GIF"
-        case .gifToMP4:           return "GIF 转 MP4"
-        case .gifFrames:          return "提取照片"
-        case .videoToMP4:         return "转 MP4"
-        case .videoCompress:      return "压缩"
-        case .videoCompressSize:  return "压缩到指定大小"
-        case .videoGrabFrame:     return "提取照片"
-        case .videoExtractAudio:  return "提取音频"
-        case .audioConvert:       return "格式转换"
-        case .audioTrim:          return "裁剪"
-        case .audioMerge:         return "连接"
-        case .toPDF:              return "转 PDF"
-        case .unzip:              return "解压"
-        case .zip:                return "压缩"
+        case .imageResize:        return "main.photo.compress"
+        case .imageTargetSize:    return "main.photo.compress_fixed_size"
+        case .imageConvert:       return "main.photo.convert"
+        case .livePhotoToVideo:   return "main.photo.lp_2_mp4"
+        case .videoToGIF:         return "main.gif.mp4_2_gif"
+        case .livePhotoToGIF:     return "main.gif.lp_2_gif"
+        case .gifToMP4:           return "main.gif.gif_2_mp4"
+        case .gifFrames:          return "main.gif.extract_image"
+        case .videoCompress:      return "main.video.compress"
+        case .videoCompressSize:  return "main.video.compress_fixed_size"
+        case .videoToMP4:         return "main.video.convert"
+        case .videoExtractAudio:  return "main.video.extract_audio"
+        case .videoGrabFrame:     return "main.video.extract_image"
+        case .audioTrim:          return "main.audio.trim"
+        case .audioConvert:       return "main.audio.convert"
+        case .audioMerge:         return "main.audio.concat"
+        case .toPDF:              return "main.pdf.image_2_pdf"
+        case .unzip:              return "main.archive.unzip"
+        case .zip:                return "main.archive.zip"
         }
     }
+
+    var title: String { L10n.t(titleKey) }
 
     var symbol: String {
         switch self {
