@@ -15,8 +15,6 @@ struct ToolboxView: View {
     @AppStorage("compressDoneAlert") private var compressDoneAlert = true
     @AppStorage("homeStyle") private var homeStyle = "image_text"
 
-    @State private var showSettings = false
-    @State private var showBrowser = false
     @State private var pendingTool: ToolAction?
     @State private var pendingChoice = ""
     @State private var showPicker = false
@@ -37,7 +35,7 @@ struct ToolboxView: View {
     // 实况照片
     @State private var showLivePicker = false
 
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 0), count: 4)
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 12), count: 3)
 
     // 原版 VC_Main 的分组顺序，标题与项名都取自 Localizable.strings
     private let sections: [(key: String, tools: [ToolAction])] = [
@@ -52,39 +50,18 @@ struct ToolboxView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 26) {
-                inspirationBanner
+            VStack(alignment: .leading, spacing: 22) {
                 ForEach(sections, id: \.key) { section in
                     toolSection(section.key, section.tools)
                 }
             }
             .padding(.horizontal, 16)
-            .padding(.top, 4)
+            .padding(.top, 12)
             .padding(.bottom, 40)
         }
         .background(Theme.groupedBG)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button { showSettings = true } label: {
-                    Image(systemName: "gearshape")
-                        .font(.system(size: 17, weight: .medium))
-                        .foregroundColor(Theme.label)
-                }
-            }
-        }
-        .fullScreenCover(isPresented: $showBrowser) {
-            BrowserView(webViewStore: webViewStore,
-                        resourceStore: resourceStore,
-                        downloadManager: downloadManager,
-                        siteStore: siteStore,
-                        onClose: { showBrowser = false })
-        }
-        .sheet(isPresented: $showSettings) {
-            SettingsView(webViewStore: webViewStore,
-                         resourceStore: resourceStore,
-                         downloadManager: downloadManager)
-        }
+        .navigationTitle("小工具")
+        .navigationBarTitleDisplayMode(.large)
         .sheet(isPresented: $showLivePicker) {
             LivePhotoPicker { asset in
                 showLivePicker = false
@@ -122,35 +99,6 @@ struct ToolboxView: View {
         .overlay(alignment: .bottom) { bottomBar }
     }
 
-    // MARK: - 探索灵感（顶部推广条，原版 VC_Main 的第一个区块）
-
-    private var inspirationBanner: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(L10n.t("main.inspiration"))
-                .font(.headline)
-                .foregroundColor(Theme.label)
-
-            Text(L10n.t("main.inspiration.tip"))
-                .font(.footnote)
-                .foregroundColor(Theme.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Button { showBrowser = true } label: {
-                HStack(spacing: 2) {
-                    Text(L10n.t("main.start_explore_inspiration"))
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 11, weight: .semibold))
-                }
-                .font(.subheadline)
-            }
-            .padding(.top, 2)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .background(Theme.card)
-        .cornerRadius(10)
-    }
-
     // MARK: - 分组
 
     private func toolSection(_ key: String, _ items: [ToolAction]) -> some View {
@@ -158,9 +106,9 @@ struct ToolboxView: View {
             Text(L10n.t(key))
                 .font(Theme.sectionTitle)
                 .foregroundColor(Theme.secondary)
-                .padding(.leading, 4)
+                .padding(.leading, 2)
 
-            LazyVGrid(columns: columns, spacing: 14) {
+            LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(items) { tool in
                     Button { tap(tool) } label: {
                         ToolCard(tool: tool, textOnly: homeStyle == "text")
@@ -332,21 +280,9 @@ struct ToolCard: View {
     var textOnly: Bool = false
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 8) {
             if !textOnly {
-                ZStack(alignment: .topTrailing) {
-                    Image(systemName: tool.symbol)
-                        .font(Theme.tileIcon)
-                        .foregroundColor(Theme.icon)
-                        .frame(height: 30)
-
-                    if let badge = tool.badge {
-                        Text(badge)
-                            .font(.system(size: 8, weight: .semibold))
-                            .foregroundColor(Theme.secondary)
-                            .offset(x: 10, y: -2)
-                    }
-                }
+                iconTile
             }
 
             Text(tool.title)
@@ -357,8 +293,37 @@ struct ToolCard: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: textOnly ? 40 : 76, alignment: textOnly ? .center : .top)
-        .contentShape(Rectangle())
+        .padding(.horizontal, 6)
+        .frame(height: textOnly ? 54 : 104)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Theme.card)
+        )
+        .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    /// 图标：淡色圆角底 + 同色系图标，每种功能一种颜色，便于一眼区分
+    private var iconTile: some View {
+        ZStack(alignment: .topTrailing) {
+            RoundedRectangle(cornerRadius: 11, style: .continuous)
+                .fill(tool.tint.opacity(0.13))
+                .frame(width: 46, height: 46)
+                .overlay(
+                    Image(systemName: tool.symbol)
+                        .font(.system(size: 21, weight: .regular))
+                        .foregroundColor(tool.tint)
+                )
+
+            if let badge = tool.badge {
+                Text(badge)
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 3)
+                    .padding(.vertical, 1)
+                    .background(Capsule().fill(tool.tint))
+                    .offset(x: 7, y: -4)
+            }
+        }
     }
 }
 
@@ -395,7 +360,7 @@ enum ToolAction: String, Identifiable, CaseIterable {
         case .audioMerge:         return "main.audio.concat"
         case .toPDF:              return "main.pdf.image_2_pdf"
         case .unzip:              return "main.archive.unzip"
-        case .zip:                return "main.archive.zip"
+        case .zip:                return "main.archive.archive"
         }
     }
 
@@ -416,6 +381,24 @@ enum ToolAction: String, Identifiable, CaseIterable {
         case .toPDF:                                    return "doc.richtext"
         case .unzip:                                    return "archivebox"
         case .zip:                                      return "shippingbox"
+        }
+    }
+
+    /// 每种工具的色系（系统色，深浅色模式自适应）
+    var tint: Color {
+        switch self {
+        case .imageConvert, .videoToMP4, .audioConvert:   return Color(uiColor: .systemBlue)
+        case .imageResize, .videoCompress:                return Color(uiColor: .systemTeal)
+        case .imageTargetSize, .videoCompressSize:        return Color(uiColor: .systemIndigo)
+        case .livePhotoToVideo, .livePhotoToGIF:          return Color(uiColor: .systemPink)
+        case .videoToGIF:                                 return Color(uiColor: .systemOrange)
+        case .gifToMP4:                                   return Color(uiColor: .systemPurple)
+        case .gifFrames, .videoGrabFrame:                 return Color(uiColor: .systemGreen)
+        case .videoExtractAudio, .audioMerge:             return Color(uiColor: .systemMint)
+        case .audioTrim:                                  return Color(uiColor: .systemYellow)
+        case .toPDF:                                      return Color(uiColor: .systemRed)
+        case .unzip:                                      return Color(uiColor: .systemBrown)
+        case .zip:                                        return Color(uiColor: .systemGray)
         }
     }
 

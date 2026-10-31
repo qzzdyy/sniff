@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// 轻量分享面板封装
 struct ShareSheet: UIViewControllerRepresentable {
@@ -28,28 +29,25 @@ struct ContentView: View {
     @StateObject private var m3Store = M3TaskStore.shared
 
     @AppStorage("m3.floatWindow") private var floatWindow = false
-    @AppStorage("hasSeenTips") private var hasSeenTips = false
 
     @State private var showM3Manager = false
-    @State private var showTips = false
     @State private var ballOffset: CGSize = .zero
     @State private var lastBallOffset: CGSize = .zero
 
     private let accent = Color(red: 0.11, green: 0.11, blue: 0.12)
 
+    init() {
+        // 底部标签栏：未选中灰、选中黑，与本 App 的克制风格一致
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        UITabBar.appearance().standardAppearance = appearance
+        UITabBar.appearance().scrollEdgeAppearance = appearance
+    }
+
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            // 原版只有两个主界面：小工具（VC_Main）与探索灵感（VC_Browser）。
-            // 下载任务不单独占 tab，进度由浮窗和「任务管理」承载。
             TabView {
-                NavigationStack {
-                    ToolboxView(webViewStore: webViewStore,
-                                resourceStore: resourceStore,
-                                downloadManager: downloadManager,
-                                siteStore: siteStore)
-                }
-                .tabItem { Label(L10n.t("settings.section.tools"), systemImage: "square.grid.2x2") }
-
+                // 1. 探索（浏览器）
                 NavigationStack {
                     BrowserView(webViewStore: webViewStore,
                                 resourceStore: resourceStore,
@@ -57,8 +55,32 @@ struct ContentView: View {
                                 siteStore: siteStore)
                         .navigationBarHidden(true)
                 }
-                .tabItem { Label(L10n.t("main.inspiration"), systemImage: "safari") }
+                .tabItem { Label("探索", systemImage: "safari") }
+
+                // 2. 小工具
+                NavigationStack {
+                    ToolboxView(webViewStore: webViewStore,
+                                resourceStore: resourceStore,
+                                downloadManager: downloadManager,
+                                siteStore: siteStore)
+                }
+                .tabItem { Label("小工具", systemImage: "square.grid.2x2") }
+
+                // 3. 下载
+                NavigationStack {
+                    DownloadsView(downloadManager: downloadManager)
+                }
+                .tabItem { Label("下载", systemImage: "arrow.down.circle") }
+
+                // 4. 设置
+                NavigationStack {
+                    SettingsView(webViewStore: webViewStore,
+                                 resourceStore: resourceStore,
+                                 downloadManager: downloadManager)
+                }
+                .tabItem { Label("设置", systemImage: "gearshape") }
             }
+            .tint(accent)
 
             if floatWindow, let active = m3Store.currentActive {
                 floatingBall(active)
@@ -66,12 +88,6 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showM3Manager) {
             M3TaskManagerView()
-        }
-        .fullScreenCover(isPresented: $showTips) {
-            TipsView { hasSeenTips = true; showTips = false }
-        }
-        .onAppear {
-            if !hasSeenTips { showTips = true }
         }
     }
 

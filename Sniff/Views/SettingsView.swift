@@ -7,7 +7,6 @@ struct SettingsView: View {
     @ObservedObject var resourceStore: ResourceStore
     @ObservedObject var downloadManager: DownloadManager
 
-    @Environment(\.dismiss) private var dismiss
     @AppStorage("compressDoneAlert") private var compressDoneAlert = true
     @AppStorage("floatWindow") private var floatWindow = false
     @AppStorage("homeStyle") private var homeStyle = "image_text"
@@ -21,8 +20,7 @@ struct SettingsView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Form {
+        Form {
                 // 1. 小工具们
                 Section(L10n.t("settings.section.tools")) {
                     Picker(L10n.t("settings.style"), selection: $homeStyle) {
@@ -99,24 +97,17 @@ struct SettingsView: View {
                     .padding(.top, 4)
                 }
             }
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(L10n.t("g.finish")) { dismiss() }
-                }
-            }
-            .onAppear(perform: updateCacheText)
-            .sheet(isPresented: $showM3) { M3TaskManagerView() }
-            .overlay(alignment: .bottom) {
-                if let toast {
-                    Text(toast)
-                        .font(.footnote)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 16).padding(.vertical, 10)
-                        .background(Capsule().fill(Color.black.opacity(0.82)))
-                        .padding(.bottom, 26)
-                }
+        .navigationTitle("设置")
+        .onAppear(perform: updateCacheText)
+        .sheet(isPresented: $showM3) { M3TaskManagerView() }
+        .overlay(alignment: .bottom) {
+            if let toast {
+                Text(toast)
+                    .font(.footnote)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 16).padding(.vertical, 10)
+                    .background(Capsule().fill(Color.black.opacity(0.82)))
+                    .padding(.bottom, 26)
             }
         }
     }
