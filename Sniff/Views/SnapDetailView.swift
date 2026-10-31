@@ -114,12 +114,12 @@ struct SnapDetailView: View {
                 if let exporting { DocumentExporter(urls: exporting) }
             }
             .alert("删除选中的 \(selected.count) 项？", isPresented: $confirmDelete) {
-                Button(L10n.t("g.delete", role: .destructive) {
+                Button(L10n.t("g.delete"), role: .destructive) {
                     let ids = selected
                     resourceStore.remove(ids: ids)
                     selected.removeAll()
                 }
-                Button(L10n.t("g.cancel", role: .cancel) {}
+                Button(L10n.t("g.cancel"), role: .cancel) {}
             }
             .overlay(alignment: .bottom) {
                 if let toast {

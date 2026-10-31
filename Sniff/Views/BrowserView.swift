@@ -554,7 +554,7 @@ struct BrowserSettingsSheet: View {
             }
             .confirmationDialog("确定清除？", isPresented: $confirmClear, titleVisibility: .visible) {
                 Button("清除", role: .destructive) { clearWebsiteData() }
-                Button(L10n.t("g.cancel", role: .cancel) {}
+                Button(L10n.t("g.cancel"), role: .cancel) {}
             }
         }
     }

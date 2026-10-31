@@ -117,7 +117,7 @@ struct ToolboxView: View {
                     showPicker = true
                 }
             }
-            Button(L10n.t("g.cancel", role: .cancel) { pendingTool = nil }
+            Button(L10n.t("g.cancel"), role: .cancel) { pendingTool = nil }
         }
         .overlay(alignment: .bottom) { bottomBar }
     }

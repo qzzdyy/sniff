@@ -101,8 +101,8 @@ struct ResourceListView: View {
                          downloadManager: downloadManager)
         }
         .confirmationDialog("删除选中的 \(selected.count) 项？", isPresented: $showDeleteConfirm, titleVisibility: .visible) {
-            Button(L10n.t("g.delete", role: .destructive) { batchDelete() }
-            Button(L10n.t("g.cancel", role: .cancel) {}
+            Button(L10n.t("g.delete"), role: .destructive) { batchDelete() }
+            Button(L10n.t("g.cancel"), role: .cancel) {}
         } message: {
             Text("本地已下载的文件会一起删掉，此操作不可恢复")
         }
